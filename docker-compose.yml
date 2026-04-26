@@ -1,0 +1,86 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - LEGACY_TOKEN=${LEGACY_TOKEN}
+      - PORT=5005
+      - IMAGE_BASE_URL=${IMAGE_BASE_URL:-https://api.adenteknik.site}
+    volumes:
+      - backend_images:/app/images
+    networks:
+      - yaprak-net
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-backend.rule=Host(`${API_DOMAIN:-api.adenteknik.site}`)"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-backend.entrypoints=websecure"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-backend.priority=90"
+      - "traefik.http.services.${PROJECT_NAME:-yaprak}-backend.loadbalancer.server.port=5005"
+
+  yaprak:
+    build:
+      context: ./yaprak
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - RENDERER_PORT=3001
+      - PORT=3001
+      - IMAGE_BASE_URL=${IMAGE_BASE_URL:-https://api.adenteknik.site}
+      - BACKEND_URL=http://backend:5005
+    depends_on:
+      - backend
+    networks:
+      - yaprak-net
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak.rule=HostRegexp(`^.+\\.${BASE_DOMAIN:-adenteknik.site}$$`)"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak.entrypoints=websecure"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak.tls.domains[0].main=${BASE_DOMAIN:-adenteknik.site}"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak.tls.domains[0].sans=*.${BASE_DOMAIN:-adenteknik.site}"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak.priority=50"
+      - "traefik.http.services.${PROJECT_NAME:-yaprak}-yaprak.loadbalancer.server.port=3001"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak-http.rule=HostRegexp(`^.+\\.${BASE_DOMAIN:-adenteknik.site}$$`)"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak-http.entrypoints=web"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-yaprak-http.middlewares=${PROJECT_NAME:-yaprak}-https-redirect"
+      - "traefik.http.middlewares.${PROJECT_NAME:-yaprak}-https-redirect.redirectscheme.scheme=https"
+
+  panel:
+    build:
+      context: ./panel
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-https://api.adenteknik.site}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - yaprak-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-panel.rule=Host(`${PANEL_DOMAIN:-adenteknik.site}`)"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-panel.entrypoints=websecure"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-panel.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${PROJECT_NAME:-yaprak}-panel.priority=100"
+      - "traefik.http.services.${PROJECT_NAME:-yaprak}-panel.loadbalancer.server.port=80"
+
+volumes:
+  backend_images:
+
+networks:
+  yaprak-net:
+    driver: bridge
+  dokploy-network:
+    external: true

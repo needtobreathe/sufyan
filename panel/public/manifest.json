@@ -1,0 +1,22 @@
+{
+  "name": "Sufyan Admin Panel",
+  "short_name": "Sufyan Admin",
+  "description": "Sipariş Yönet Sipariş Takip Sistemi",
+  "start_url": "/orders?filter=new",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "https://cdn.myikas.com/images/theme-images/97987e86-d147-4b63-a081-34e07894d6f5/image_180.webp",
+      "sizes": "180x180",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.myikas.com/images/theme-images/97987e86-d147-4b63-a081-34e07894d6f5/image_180.webp",
+      "sizes": "512x512",
+      "type": "image/webp"
+    }
+  ]
+}

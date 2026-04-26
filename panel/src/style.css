@@ -1,0 +1,42 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #111;
+  background: #fafafa;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ====== GLOBAL PRINT STYLES ====== */
+@media print {
+  .sidebar,
+  .sidebar-overlay,
+  .topbar {
+    display: none !important;
+  }
+  .main {
+    margin-left: 0 !important;
+  }
+  .layout {
+    display: block !important;
+  }
+  .content {
+    padding: 0 !important;
+  }
+  body {
+    background: #fff !important;
+  }
+}

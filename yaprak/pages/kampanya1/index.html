@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hemen Sipariş Ver</title>
+    <meta name="description" content="Ürününüzü kapıda ödeme seçeneğiyle hemen sipariş verin.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SEO & Social Sharing (OG Tags) -->
+    <meta property="og:title" content="Özel Kampanya | Fırsatı Kaçırmayın!">
+    <meta property="og:description" content="Kısa süreliğine özel fiyat, aynı gün kargo ve kapıda ödeme fırsatıyla hemen sipariş verin.">
+    <meta property="og:image" content="https://siteniz.com/images/landing_block_69a2d35660eb7_1772278614.webp">
+    <meta property="og:url" content="https://siteniz.com">
+    <meta property="og:type" content="website">
+
+    <!-- Meta Pixel Code injected by server -->
+    
+    <!-- Preload hero image for maximum LCP performance -->
+    <link rel="preload" as="image" href="images/landing_block_69a2d35660eb7_1772278614.webp" type="image/webp">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="landing-container">
+        <!-- Image Stack -->
+        <div class="image-stack">
+<img src="/images/1773332456465-556027765.webp" class="landing-img" fetchpriority="high" decoding="sync">
+<img src="/images/1773332456472-707764350.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456474-990977499.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456476-795824708.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456479-257653173.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456481-726106429.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456587-222102613.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456645-38397138.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456655-454007419.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456678-998458446.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456764-266014553.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456835-765473899.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456838-433740724.webp" class="landing-img" loading="lazy" decoding="async">
+<img src="/images/1773332456894-813740550.webp" class="landing-img" loading="lazy" decoding="async">
+        </div>
+        
+        <!-- Order Form -->
+        <div class="order-form-wrapper" id="siparis-formu">
+            <div class="order-form-container">
+
+                <form id="orderForm">
+                    <div class="form-group">
+                        <label for="fullName">Adınız Soyadınız</label>
+                        <input type="text" id="fullName" name="fullName" required placeholder="Örn: Ahmet Yılmaz">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Telefon Numaranız</label>
+                        <input type="tel" id="phone" name="phone" required placeholder="0 (5XX) XXX XX XX" maxlength="14">
+                    </div>
+
+                    <!-- Hidden Province/District (Filled automatically as 'Belirtilmedi' in script) -->
+                    <input type="hidden" name="province" value="Belirtilmedi">
+                    <input type="hidden" name="district" value="Belirtilmedi">
+
+                    <div class="form-group">
+                        <label for="address">Açık Adresiniz</label>
+                        <textarea id="address" name="address" rows="3" required placeholder="Sadece bina, daire no ve detayları yazmanız yeterli..."></textarea>
+                    </div>
+
+                    <div class="form-group payment-methods">
+                        <label>Ödeme Yöntemi</label>
+                        <div class="radio-group single-payment">
+                            <label class="radio-card highlight-card">
+                                <input type="radio" name="paymentMethod" value="kapida_odeme" checked>
+                                <div class="radio-icon icon-kart">
+                                    <i class="fa-solid fa-truck-fast"></i>
+                                </div>
+                                <div class="radio-content">
+                                    <span class="title">Kapıda Ödeme</span>
+                                    <span class="desc">İster nakit, ister kart ile ödeyin.</span>
+                                </div>
+                                <div class="check-mark">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        Siparişi Tamamla
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    
+                    <div class="secure-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Bilgileriniz %100 güvence altındadır.</span>
+                    </div>
+                </form>
+        </div>
+    </div>
+
+    <!-- Trust Badges Image -->
+    <img src="https://i.imgur.com/ckZSNIt.png" alt="Güvenli Alışveriş" class="trust-banner-img">
+
+
+    <!-- Sticky Banner -->
+    <div class="sticky-banner" id="stickyBanner">
+        <div class="banner-left">
+            <span class="banner-text-1">Kampanyalı Fiyatları</span>
+            <span class="banner-text-3">Görmek için Tıkla</span>
+        </div>
+        <div class="banner-right">
+            <div class="banner-timer">
+                <i class="fa-regular fa-clock"></i> 
+                <span id="countdownTimer">22:38</span>
+            </div>
+            <span class="banner-viewer-count"><i class="fa-solid fa-fire" style="color: #ffdda1;"></i> <span id="viewerCount">43</span> kişi inceliyor</span>
+        </div>
+    </div>
+    
+    <!-- Phone Error Modal -->
+    <div id="phoneErrorModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3>Numara Geçersiz</h3>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Lütfen telefon numaranızı kontrol edip <strong>tekrar girin:</strong></p>
+                <div class="modal-input-group">
+                    <input type="tel" id="modalPhoneInput" placeholder="0 (5XX) XXX XX XX" maxlength="14" class="modal-input">
+                </div>
+                <div class="example-box">
+                    <span>Örnek:</span>
+                    <strong>05XX XXX XX XX</strong>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" id="fixPhoneBtn">Numarayı Düzelt</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

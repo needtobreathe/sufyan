@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Siparişiniz Alındı - Teşekkürler</title>
+    <base href="/">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/lp-assets/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --success-gradient: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            --wa-gradient: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        }
+
+        * {
+            box-sizing: border-box; margin: 0; padding: 0;
+        }
+
+        body {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        .success-page {
+            min-height: 100vh;
+            background: #f8fafc;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        .main-card {
+            background: white;
+            width: 100%;
+            max-width: 440px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 20px 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #f1f5f9;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ecfdf5;
+            color: #10b981;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .check-circle {
+            width: 56px;
+            height: 56px;
+            background: var(--success-gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 12px;
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .welcome-text {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        /* Timeline Styles */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            position: relative;
+            padding: 0 10px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: 1;
+        }
+
+        .step-dot {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: all 0.3s;
+        }
+
+        .step-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        /* Order Summary Card */
+        .order-summary {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: left;
+            border: 1px solid #f1f5f9;
+        }
+
+        .summary-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .total-row {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-row .price { font-size: 17px; font-weight: 800; color: var(--primary); }
+
+        /* WhatsApp Section */
+        .action-box {
+            background: #f0fdf4;
+            border: 1px solid #dcfce7;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .action-text {
+            font-size: 12px;
+            color: #166534;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .wa-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--wa-gradient);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 15px;
+            text-decoration: none;
+            width: 100%;
+            gap: 8px;
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+            transition: all 0.3s;
+        }
+
+        .wa-btn i { font-size: 18px; }
+
+        /* Trust Badges - More compact */
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .badge-item i { color: #10b981; }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(.8); opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .wa-btn { position: relative; }
+        .wa-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 14px;
+            background: #25D366;
+            animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-page">
+        <div class="main-card">
+            <div class="status-badge">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Hızlı İşlem Modu Aktif
+            </div>
+
+            <div class="check-circle">
+                <i class="fa-solid fa-check"></i>
+            </div>
+
+            <h1>Tebrikler, Siparişiniz Alındı!</h1>
+            <p class="welcome-text">Değerli müşterimiz, siparişiniz başarıyla sisteme kaydedildi. Şimdi son bir adım kaldı.</p>
+
+            <div class="timeline">
+                <div class="step completed">
+                    <div class="step-dot"><i class="fa-solid fa-check"></i></div>
+                    <span class="step-label">Alındı</span>
+                </div>
+                <div class="step active">
+                    <div class="step-dot">2</div>
+                    <span class="step-label">ONAY</span>
+                </div>
+                <div class="step">
+                    <div class="step-dot">3</div>
+                    <span class="step-label">Kargoda</span>
+                </div>
+            </div>
+
+            <div class="order-summary">
+                <div class="summary-title">
+                    SİPARİŞ ÖZETİ
+                    <span id="orderIdDisplay" style="color:var(--primary)">#0000</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Alıcı</span>
+                    <span class="value" id="summaryName">Yükleniyor...</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Ürün</span>
+                    <span class="value" id="summaryProduct">-</span>
+                </div>
+                <div class="total-row">
+                    <span class="label">Toplam Ödeme</span>
+                    <span class="price" id="summaryPrice">0.00 TL</span>
+                </div>
+            </div>
+
+            <div class="action-box">
+                <p class="action-text">Siparişinizin kargoya verilmesi için lütfen WhatsApp üzerinden hızlı onay verin.</p>
+                <a href="#" id="waBtn" class="wa-btn">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    Siparişi Onayla
+                </a>
+            </div>
+
+            <div class="trust-badges">
+                <div class="badge-item">
+                    <i class="fa-solid fa-shield-check"></i>
+                    Güvenli Alışveriş
+                </div>
+                <div class="badge-item">
+                    <i class="fa-solid fa-truck"></i>
+                    Hızlı Teslimat
+                </div>
+                <div class="badge-item">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                    Kapıda Ödeme
+                </div>
+                <div class="badge-item">
+                    <i class="fa-solid fa-headset"></i>
+                    7/24 Destek
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 🎉 Celebration!
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#f27a1a', '#10b981', '#ffffff']
+            });
+
+            const orderDataStr = sessionStorage.getItem('lastOrder');
+            const waBtn = document.getElementById('waBtn');
+            const defaultPhone = '905444778742';
+            
+            let targetUrl = `https://wa.me/${defaultPhone}`;
+
+            if (orderDataStr) {
+                try {
+                    const orderData = JSON.parse(orderDataStr);
+                    
+                    // Display Summary info
+                    document.getElementById('summaryName').textContent = orderData.fullName || 'Değerli Müşterimiz';
+                    document.getElementById('summaryProduct').textContent = orderData.product_name || 'Ürün Paketi';
+                    document.getElementById('summaryPrice').textContent = (orderData.totalPrice || 0) + ' TL';
+                    if (orderData.orderId) {
+                        document.getElementById('orderIdDisplay').textContent = '#' + String(orderData.orderId).slice(-4).toUpperCase();
+                    }
+
+                    const finalPhone = orderData.productPhone || defaultPhone;
+                    
+                    const siteName = orderData.siteId && orderData.siteId !== 'default' ? orderData.siteId : '';
+                    const pkgName = orderData.product_name || '';
+                    const productName = [siteName, pkgName].filter(Boolean).join(' - ') || 'Paket';
+                    
+                    const message = `Merhaba ${orderData.fullName}
+
+📦 Sipariş Detayları
+Ad Soyad: ${orderData.fullName}
+Telefon: ${orderData.phone}
+Adres: ${orderData.address}
+Ürün: ${productName}
+Ödeme: Kapıda Nakit/Kart
+
+Siparişimi onaylamak istiyorum. En kısa sürede kargolanmasını rica ederim.`;
+
+                    const encodedMessage = encodeURIComponent(message);
+                    targetUrl = `https://wa.me/${finalPhone}?text=${encodedMessage}`;
+                } catch (e) {
+                    console.error("Order Data Error:", e);
+                }
+            }
+            
+            waBtn.href = targetUrl;
+
+            // --- Pixel Tracking (Moved to form submit in script.js) ---
+            if (orderDataStr) {
+                try {
+                    const orderData = JSON.parse(orderDataStr);
+                } catch (e) { console.error("Pixel Error:", e); }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sipariş Yönet | Profesyonel Çözümler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #0f172a;
+        --accent: #2563eb;
+        --accent-light: #60a5fa;
+        --bg: #fdfdfd;
+        --card-bg: #ffffff;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --radius-lg: 24px;
+        --radius-md: 16px;
+        --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+        --shadow-hover: 0 20px 50px -12px rgba(37, 99, 235, 0.15);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background-color: var(--bg);
+        color: var(--text-main);
+        overflow-x: hidden;
+      }
+
+      /* Scrolling Announcement Bar */
+      .announcement-bar {
+        background: var(--primary);
+        color: white;
+        padding: 10px 0;
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+        z-index: 100;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .scrolling-text {
+        display: inline-block;
+        animation: scroll-text 60s linear infinite;
+        padding-left: 100%;
+      }
+
+      .scrolling-text span {
+        display: inline-block;
+        padding-right: 50px;
+      }
+
+      .scrolling-text span::after {
+        content: "•";
+        margin-left: 25px;
+        color: var(--accent-light);
+      }
+
+      @keyframes scroll-text {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      /* Hero Section */
+      .hero {
+        position: relative;
+        padding: 100px 20px 140px;
+        background: radial-gradient(
+          circle at top right,
+          #eff6ff 0%,
+          #ffffff 50%
+        );
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 400px;
+        height: 400px;
+        background: var(--accent);
+        filter: blur(150px);
+        opacity: 0.05;
+        z-index: 0;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #dbeafe;
+        color: var(--accent);
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 24px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        animation: fadeInDown 0.8s ease;
+      }
+
+      .hero h1 {
+        font-family: "Outfit", sans-serif;
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 24px;
+        color: var(--primary);
+        letter-spacing: -0.02em;
+      }
+
+      .hero h1 span {
+        background: linear-gradient(135deg, var(--accent), #4f46e5);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .hero p {
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 0 auto 40px;
+        line-height: 1.6;
+      }
+
+      /* Feature Icons */
+      .features {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .feature-item svg {
+        width: 20px;
+        height: 20px;
+        color: var(--accent);
+      }
+
+      /* Product Grid */
+      .container {
+        max-width: 1300px;
+        margin: -60px auto 100px;
+        padding: 0 30px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 40px;
+      }
+
+      .product-card {
+        background: var(--card-bg);
+        border-radius: var(--radius-lg);
+        padding: 12px;
+        text-decoration: none;
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        box-shadow: var(--shadow-soft);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .product-card:hover {
+        transform: translateY(-12px);
+        box-shadow: var(--shadow-hover);
+        border-color: rgba(37, 99, 235, 0.1);
+      }
+
+      .image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 100%;
+        border-radius: calc(var(--radius-lg) - 8px);
+        overflow: hidden;
+        background: #f8fafc;
+      }
+
+      .image-wrapper img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .product-card:hover .image-wrapper img {
+        transform: scale(1.1);
+      }
+
+      .card-body {
+        padding: 24px 12px 12px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-body h2 {
+        font-family: "Outfit", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--primary);
+      }
+
+      .btn-explore {
+        margin-top: auto;
+        width: 100%;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border-radius: var(--radius-md);
+        text-align: center;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .product-card:hover .btn-explore {
+        background: var(--accent);
+        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+      }
+
+      /* Animations */
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .product-card {
+        animation: fadeInUp 0.8s ease backwards;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+    <!-- PIXEL_PLACEHOLDER -->
+  </head>
+  <body>
+    <div class="announcement-bar">
+      <div class="scrolling-text">
+        <!-- SCROLLING_TEXT_PLACEHOLDER -->
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-content">
+        <span class="badge">Sınırlı Stok & Özel Fırsatlar</span>
+        <h1>Sipariş Yönet <span>Fırsat Dünyası</span></h1>
+        <p>
+          Türkiye'nin en sevilen ürünleri, Sipariş Yönet kalitesi ve
+          güvencesiyle kapınızda. Hemen keşfedin!
+        </p>
+
+        <div class="features">
+          <div class="feature-item">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              ></path>
+            </svg>
+            Hızlı Teslimat
+          </div>
+          <div class="feature-item">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              ></path>
+            </svg>
+            Güvenli Ödeme
+          </div>
+          <div class="feature-item">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              ></path>
+            </svg>
+            %100 Orijinal
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="container">
+      <div class="product-grid" id="productGrid">
+        <!-- PRODUCTS_PLACEHOLDER -->
+      </div>
+    </main>
+
+    <script>
+      // Sayfa yüklendiğinde kartlara gecikmeli animasyon ekle
+      document.addEventListener("DOMContentLoaded", () => {
+        const cards = document.querySelectorAll(".product-card");
+        cards.forEach((card, index) => {
+          card.style.animationDelay = `${index * 0.1}s`;
+        });
+      });
+    </script>
+  </body>
+</html>

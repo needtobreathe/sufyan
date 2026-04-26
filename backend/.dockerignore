@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+Dockerfile
+images/
+# Görseller volume olarak bağlanmalı, imaja dahil edilmemeli
