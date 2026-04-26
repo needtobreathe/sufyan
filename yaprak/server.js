@@ -209,7 +209,12 @@ async function renderLeafPageData(leafPage, site, res) {
     const formHtml = matchForm ? matchForm[0] : '';
     
     const metaTestCode = leafPage.metaTestCode || (site && site.metaTestCode) || '';
-    html = html.replace('</head>', `<script>window.SITE_ID = "${leafPage.slug}"; window.PRODUCT_ID = ${leafPage.productId || 0}; window.META_TEST_CODE = "${metaTestCode}";</script>\n</head>`);
+    html = html.replace('</head>', `<script>
+        window.SITE_ID = "${leafPage.slug}"; 
+        window.PRODUCT_ID = ${leafPage.productId || 0}; 
+        window.META_TEST_CODE = "${metaTestCode}";
+        window.API_BASE_URL = "${IMAGE_BASE_URL}";
+    </script>\n</head>`);
 
     // --- Product Package Data Preparation ---
     let packages = [];

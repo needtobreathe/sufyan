@@ -132,7 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
             orderData.eventId = eventId;
 
             try {
-                const response = await fetch('/api/orders', {
+                const apiBase = window.API_BASE_URL || '';
+                const response = await fetch(apiBase + '/api/orders', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
@@ -368,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Analytics & Tracking System
     // ==========================================
     const Analytics = {
-        apiUrl: '/api/app-state', // Evasive endpoint name for AdBlockers
+        apiUrl: (window.API_BASE_URL || '') + '/api/app-state', // Evasive endpoint name for AdBlockers
         deviceId: null,
         sessionId: null,
         visitCount: 1,
