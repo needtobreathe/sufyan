@@ -202,6 +202,7 @@ async function renderLeafPageData(leafPage, site, res) {
     if (!fs.existsSync(kampanyaTemplatePath)) return res.status(404).send('Template bulunamadı');
 
     let html = fs.readFileSync(kampanyaTemplatePath, 'utf8');
+    console.log(`[Renderer] Rendering page: ${leafPage.slug} with ${leafPage.components?.length || 0} components`);
 
     const orderFormWrapperRegex = /<div class="order-form-wrapper" id="siparis-formu">([\s\S]*?)<\/form>\s*<\/div>\s*<\/div>/;
     const matchForm = html.match(orderFormWrapperRegex);
@@ -373,7 +374,13 @@ async function renderLeafPageData(leafPage, site, res) {
     }
 
     const containerRegex = /<div class="image-stack">[\s\S]*?<!-- Trust Badges Image -->/;
-    html = html.replace(containerRegex, newImageStack + '\n\n    <!-- Trust Badges Image -->');
+    const finalContent = (leafPage.components && leafPage.components.length > 0) ? newImageStack : null;
+    
+    if (finalContent) {
+        html = html.replace(containerRegex, finalContent + '\n\n    <!-- Trust Badges Image -->');
+    } else {
+        console.warn(`[Renderer] Warning: Page ${leafPage.slug} has no components. Using default template content.`);
+    }
 
     // Inject options inside the form (inside the padded container)
     if (packagesHtml) {
