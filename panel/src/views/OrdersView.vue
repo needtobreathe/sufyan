@@ -134,27 +134,7 @@
                           <textarea v-model="quickEditData.address" rows="2"></textarea>
                         </div>
 
-                        <div class="qe-form-group">
-                          <label>Ödeme Yöntemi</label>
-                          <div class="qe-payment-toggles">
-                            <button 
-                              type="button" 
-                              class="qe-pay-btn nakit" 
-                              :class="{ active: quickEditData.paymentMethod === 'Kapıda Nakit' }"
-                              @click="quickEditData.paymentMethod = 'Kapıda Nakit'"
-                            >
-                              Kapıda Nakit
-                            </button>
-                            <button 
-                              type="button" 
-                              class="qe-pay-btn kart" 
-                              :class="{ active: quickEditData.paymentMethod === 'Kapıda Kredi Kartı' }"
-                              @click="quickEditData.paymentMethod = 'Kapıda Kredi Kartı'"
-                            >
-                              Kapıda Kart
-                            </button>
-                          </div>
-                        </div>
+
                       </div>
                       
                       <div class="qe-footer">
@@ -389,37 +369,6 @@
       </div>
     </div>
 
-    <!-- Ödeme Yöntemi Seçim Modali -->
-    <div v-if="showPaymentModal" class="modal-overlay" @click.self="showPaymentModal = false">
-      <div class="wp-modal" style="max-width: 400px">
-        <div class="modal-header">
-          <h3>Ödeme Yöntemi Seçin</h3>
-          <button class="close-btn" @click="showPaymentModal = false">&times;</button>
-        </div>
-        <div class="modal-body" style="padding: 20px;">
-          <p style="margin-bottom: 20px; font-size: 14px; color: #475569; text-align: center;">
-            Siparişi onaylamadan önce ödeme yöntemini seçiniz:
-          </p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <button class="action-btn" style="height: 100px; flex-direction: column; gap: 10px; background: #f0fdf4; border-color: #bbf7d0; color: #15803d;" @click="confirmApprovalWithPayment('nakit')">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
-                <circle cx="12" cy="12" r="2"></circle>
-                <path d="M6 12h.01M18 12h.01"></path>
-              </svg>
-              <strong>Kapıda Nakit</strong>
-            </button>
-            <button class="action-btn" style="height: 100px; flex-direction: column; gap: 10px; background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;" @click="confirmApprovalWithPayment('kart')">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                <line x1="2" y1="10" x2="22" y2="10"></line>
-              </svg>
-              <strong>Kapıda Kart</strong>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <ShipmentModal 
       :isOpen="showShipmentModal" 
@@ -620,7 +569,9 @@ const selectableStatuses = computed(() => {
     { key: 'pending', label: 'Yeni Sipariş' },
     { key: 'approved', label: 'Onaylandı' },
     { key: 'preparing', label: 'Hazırlanıyor' },
-    { key: 'shipped', label: 'Kargoya Verildi' },
+    { key: 'facebook', label: 'Facebook DM' },
+    { key: 'instagram', label: 'Instagram DM' },
+    { key: 'shipped', label: 'Kargolandı' },
     { key: 'delivered', label: 'Teslim Edildi' },
     { key: 'returned', label: 'İade' },
     { key: '13', label: 'Ulaşılamayanlar' }
@@ -1164,7 +1115,9 @@ const fetchCities = async () => {
   try {
     const res = await apiFetch('/api/cities')
     const d = await res.json()
-    if (d.success) cities.value = d.cities
+    if (d.success) {
+      cities.value = d.cities.sort((a, b) => a.name.localeCompare(b.name, 'tr'))
+    }
   } catch (e) { console.error("Cities fetch error:", e) }
 }
 
@@ -1173,7 +1126,9 @@ const fetchDistricts = async (cityId) => {
   try {
     const res = await apiFetch(`/api/districts?city_id=${cityId}`)
     const d = await res.json()
-    if (d.success) districts.value = d.districts
+    if (d.success) {
+      districts.value = d.districts.sort((a, b) => a.name.localeCompare(b.name, 'tr'))
+    }
   } catch (e) { console.error("Districts fetch error:", e) }
 }
 
@@ -1479,27 +1434,16 @@ const updateOrderStatus = async (orderId, newStatus, extraData = null) => {
   }
 }
 
-const approveOrder = (order) => {
-  selectedPaymentOrder.value = order
-  showPaymentModal.value = true
-}
-
-const confirmApprovalWithPayment = async (method) => {
-  if (!selectedPaymentOrder.value) return
-  
-  const orderId = selectedPaymentOrder.value.id
-  const methodLabel = method === 'nakit' ? 'Nakit (Kapıda Ödeme)' : 'Kredi Kartı (Kapıda Ödeme)'
-  
+const approveOrder = async (order) => {
   try {
-    const res = await apiFetch(`/api/orders/${orderId}`, {
+    const res = await apiFetch(`/api/orders/${order.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        paymentMethod: methodLabel,
+        paymentMethod: 'Kapıda Ödeme',
         status: 'preparing'
       })
     })
-    
     const data = await res.json()
     if (data.success) {
       showPaymentModal.value = false

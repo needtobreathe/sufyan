@@ -79,9 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Form Submission Handling
     const orderForm = document.getElementById('orderForm');
+    let isSubmitting = false;
+    
     if (orderForm) {
         orderForm.addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            if (isSubmitting) return;
+            isSubmitting = true;
             
             const formData = new FormData(this);
             const orderData = Object.fromEntries(formData.entries());
@@ -97,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> İşleniyor...';
             submitBtn.disabled = true;
-
             // Clean phone number (remove spaces) before sending to API
             if (orderData.phone) {
                 const rawPhone = orderData.phone.replace(/\s/g, '');
@@ -107,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showPhoneError();
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
+                    isSubmitting = false;
                     return; // Stop submission
                 }
                 
@@ -168,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
                         ttq.track('Purchase', ttPayload, { event_id: eventId });
                         ttq.track('CompletePayment', ttPayload, { event_id: eventId + '_cp' });
+                        ttq.track('PlaceAnOrder', ttPayload, { event_id: eventId + '_pao' });
                         console.log('%c[TİKTOK PİKSEL] 🎵 Purchase + CompletePayment eventleri ateşlendi! ID:', 'background: #000000; color: #00F2FE; padding: 4px;', eventId);
                     }
 
@@ -180,16 +186,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => {
                         window.location.href = 'success.html';
                     }, 400);
-                }
- else {
+                } else {
                     alert('Hata: ' + result.message);
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
+                    isSubmitting = false;
                 }
             } catch (error) {
                 alert('Bağlantı hatası oluştu. Lütfen tekrar deneyin.');
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
+                isSubmitting = false;
             }
         });
     }

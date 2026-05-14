@@ -207,11 +207,14 @@
                       </div>
                     </td>
                     <td data-label="Adet">
-                      <div class="qty-display">{{ resolveProductQty(order, item) }}</div>
+                      <input type="number" v-model.number="item.qty" class="form-input" style="width: 80px;" min="1" />
                     </td>
                     <td data-label="Tutar">
-                      <div class="price-display">{{ item.price }} TL</div>
+                      <div style="display: flex; align-items: center; gap: 4px;">
+                        <input type="number" v-model.number="item.price" class="form-input" style="width: 100px;" /> TL
+                      </div>
                     </td>
+
                   </tr>
                 </tbody>
               </table>
@@ -233,27 +236,7 @@
               </option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Ödeme Yöntemi</label>
-            <div class="qe-payment-toggles detail-pay-toggles">
-              <button 
-                type="button" 
-                class="qe-pay-btn nakit" 
-                :class="{ active: order.paymentMethod === 'Kapıda Nakit' }"
-                @click="order.paymentMethod = 'Kapıda Nakit'"
-              >
-                Kapıda Nakit
-              </button>
-              <button 
-                type="button" 
-                class="qe-pay-btn kart" 
-                :class="{ active: order.paymentMethod === 'Kapıda Kredi Kartı' }"
-                @click="order.paymentMethod = 'Kapıda Kredi Kartı'"
-              >
-                Kapıda Kart
-              </button>
-            </div>
-          </div>
+
           <div class="form-group" v-if="order.status === 'future' || order.status === '16'">
             <label>İleri Tarih</label>
             <input type="date" v-model="order.futureDate" class="form-input" />
@@ -380,7 +363,9 @@ const statusLabels = {
   future: 'İleri Tarihli',
   test: 'Test',
   '1': 'Yeni Sipariş',
-  '2': 'Onaylandı',
+  facebook: 'Facebook DM',
+  instagram: 'Instagram DM',
+  social: 'Sosyal Medya',
   '3': 'Hazırlanıyor',
   '4': 'Paketlendi',
   '5': 'Kargoya Verildi',
@@ -409,7 +394,9 @@ const selectableStatuses = computed(() => {
     { key: 'pending', label: 'Yeni Sipariş' },
     { key: 'approved', label: 'Onaylandı' },
     { key: 'preparing', label: 'Hazırlanıyor' },
-    { key: 'shipped', label: 'Kargoya Verildi' },
+    { key: 'facebook', label: 'Facebook DM' },
+    { key: 'instagram', label: 'Instagram DM' },
+    { key: 'shipped', label: 'Kargolandı' },
     { key: 'delivered', label: 'Teslim Edildi' },
     { key: 'returned', label: 'İade' },
     { key: '13', label: 'Ulaşılamayanlar' }
@@ -1003,6 +990,7 @@ const handleSave = async (silent = false) => {
           address: order.address,
           status: order.status,
           futureDate: order.futureDate,
+          items: order.items,
           quantity: order.items.reduce((sum, item) => sum + (item.qty || 0), 0),
           totalPrice: totalAmount.value
         })

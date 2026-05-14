@@ -1919,6 +1919,19 @@ async function createOrderInternal(data, ip) {
         ip_address, totalPrice, items, status, processedBy 
     } = data;
 
+    // --- DEDUPLICATION CHECK ---
+    // Prevent double orders if the same phone number creates an order within 30 seconds
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+    const existingOrder = await Order.findOne({
+        phone: phone,
+        createdAt: { $gte: thirtySecondsAgo }
+    });
+    
+    if (existingOrder) {
+        console.warn(`[Duplicate Prevention] Sipariş engellendi: ${phone}`);
+        return existingOrder;
+    }
+
     // Construct items array - Harmonize with landing page (product_name) and manual panel (items)
     let finalItems = items || [];
     
@@ -2113,7 +2126,7 @@ app.post('/api/orders', async (req, res) => {
 // Create Order (Manual Panel)
 app.post('/api/orders/manual', auth, async (req, res) => {
     try {
-        req.body.status = 'preparing'; 
+        req.body.status = req.body.status || 'preparing'; 
         req.body.processedBy = req.user.fullName;
         const newOrder = await createOrderInternal(req.body, req.ip);
         

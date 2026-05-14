@@ -121,25 +121,7 @@
 
               <div class="divider"></div>
 
-              <div class="payment-section">
-                <h3>Ödeme Yöntemi</h3>
-                <div class="payment-grid">
-                  <label class="pay-option">
-                    <input type="radio" v-model="order.paymentMethod" :value="1" />
-                    <div class="pay-card">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                      <span>Kapıda Nakit</span>
-                    </div>
-                  </label>
-                  <label class="pay-option">
-                    <input type="radio" v-model="order.paymentMethod" :value="2" />
-                    <div class="pay-card">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M1 10h22"/><path d="M11 15h2"/><path d="M1 18h22"/></svg>
-                      <span>Kapıda Kart</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>
