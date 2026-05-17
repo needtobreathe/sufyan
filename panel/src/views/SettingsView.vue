@@ -21,6 +21,24 @@
 
       <div class="form-card">
         <div class="card-header">
+          <div class="card-title">Teşekkürler Sayfası Head Kodu</div>
+          <button class="save-btn" @click="saveSettings('success_head_code')" :disabled="saving === 'success_head_code'">
+            {{ saving === 'success_head_code' ? 'Kaydediliyor...' : 'Kaydet' }}
+          </button>
+        </div>
+        <div class="form-group">
+          <label>Teşekkürler (Başarı) Sayfası Özel Head Kodları</label>
+          <textarea 
+            v-model="settings.success_head_code" 
+            class="form-input form-textarea" 
+            placeholder="Sadece teşekkürler sayfasına eklenecek kodları buraya yapıştırın (örn: &lt;script&gt;...&lt;/script&gt;)"
+          ></textarea>
+          <span class="form-hint">Buraya eklenen kodlar <strong>sadece</strong> sipariş sonrası teşekkürler (success) sayfasının &lt;head&gt; bölümüne eklenecektir. Landing page'lere eklenmez.</span>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="card-header">
           <div class="card-title">WhatsApp Ayarları</div>
           <button class="save-btn" @click="saveSettings('active_wp_number')" :disabled="saving === 'active_wp_number'">
             {{ saving === 'active_wp_number' ? 'Kaydediliyor...' : 'Kaydet' }}
@@ -67,6 +85,7 @@ import AdminLayout from '../components/AdminLayout.vue'
 
 const settings = reactive({
   global_pixel: '',
+  success_head_code: '',
   active_wp_number: '',
   urunler_scrolling_text: ''
 })
@@ -79,6 +98,7 @@ const fetchSettings = async () => {
     const data = await res.json()
     if (data.success) {
       settings.global_pixel = data.settings.global_pixel || ''
+      settings.success_head_code = data.settings.success_head_code || ''
       settings.active_wp_number = data.settings.active_wp_number || ''
       settings.urunler_scrolling_text = data.settings.urunler_scrolling_text || ''
     }

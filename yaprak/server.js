@@ -601,6 +601,18 @@ app.get('*', async (req, res, next) => {
             // Inject Pixels & Logger using the shared function
             html = await injectPixels(html, null, siteForPixel);
 
+            // Inject success-page-only head code
+            try {
+                const successHeadSetting = await GlobalSetting.findOne({ key: 'success_head_code' });
+                if (successHeadSetting && successHeadSetting.value) {
+                    if (html.includes('</head>')) {
+                        html = html.replace('</head>', () => `${successHeadSetting.value}\n</head>`);
+                    }
+                }
+            } catch (err) {
+                console.error('[Success Head Code] Inject error:', err.message);
+            }
+
             return res.send(html);
         }
     }

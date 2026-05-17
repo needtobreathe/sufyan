@@ -35,6 +35,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const showDuplicateOrderModal = () => {
+        // Remove existing modal if any
+        const existing = document.getElementById('duplicateOrderModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'duplicateOrderModal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(4px);';
+        
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:32px 24px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:dupModalIn 0.3s ease;">
+                <div style="width:64px;height:64px;background:#fff3cd;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <h3 style="margin:0 0 8px;font-size:18px;color:#1a1a1a;font-weight:700;">Siparişiniz Alınmıştır</h3>
+                <p style="margin:0 0 24px;font-size:14px;color:#666;line-height:1.6;">Siparişiniz daha önce başarıyla alınmıştır. Müşteri temsilcimiz en kısa sürede sizinle iletişime geçecektir.</p>
+                <button id="closeDupModal" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;width:100%;">Tamam</button>
+            </div>
+        `;
+
+        // Add animation keyframes
+        if (!document.getElementById('dupModalStyle')) {
+            const style = document.createElement('style');
+            style.id = 'dupModalStyle';
+            style.textContent = '@keyframes dupModalIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}';
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(modal);
+        
+        document.getElementById('closeDupModal').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    };
+
     if (closeModalBtn) closeModalBtn.addEventListener('click', hidePhoneError);
     if (fixPhoneBtn) fixPhoneBtn.addEventListener('click', () => {
         if (!modalPhoneInput) return;
@@ -186,6 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => {
                         window.location.href = 'success.html';
                     }, 400);
+                } else if (result.duplicate) {
+                    // 24 saat kuralı: Mükerrer sipariş engellendi
+                    showDuplicateOrderModal();
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                    isSubmitting = false;
                 } else {
                     alert('Hata: ' + result.message);
                     submitBtn.innerHTML = originalText;

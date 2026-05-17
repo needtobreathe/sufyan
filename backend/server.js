@@ -1964,6 +1964,7 @@ async function createOrderInternal(data, ip) {
         site_id: siteId || data.site_id,
         referer: data.referer || '', // Save referer if provided
         items: finalItems,
+        device_id: data.device_id || '',
         ip_address: ip_address || ip,
         status: status || 'pending',
         totalPrice: totalPrice || 0,
@@ -2072,6 +2073,34 @@ app.post('/api/orders', async (req, res) => {
         const { fullName, phone, address, paymentMethod } = req.body;
         if (!fullName || !phone || !address || !paymentMethod) {
             return res.status(400).json({ success: false, message: 'Lütfen tüm zorunlu alanları doldurun.' });
+        }
+
+        // --- 24 SAAT MÜKERRER SİPARİŞ KONTROLÜ ---
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
+        const deviceId = req.body.device_id;
+        const cleanPhone = phone.replace(/\s/g, '');
+
+        // Build $or conditions: block if ANY ONE matches
+        const dupConditions = [];
+        if (cleanPhone) dupConditions.push({ phone: cleanPhone });
+        if (deviceId && deviceId !== 'unknown') dupConditions.push({ device_id: deviceId });
+        if (clientIp) dupConditions.push({ ip_address: clientIp });
+
+        if (dupConditions.length > 0) {
+            const existingOrder = await Order.findOne({
+                createdAt: { $gte: twentyFourHoursAgo },
+                $or: dupConditions
+            });
+
+            if (existingOrder) {
+                console.warn(`[Duplicate 24h] Sipariş engellendi -> Telefon: ${cleanPhone}, Device: ${deviceId}, IP: ${clientIp}`);
+                return res.status(429).json({ 
+                    success: false, 
+                    duplicate: true,
+                    message: 'Siparişiniz daha önce alınmıştır. Müşteri temsilcimiz en kısa sürede sizinle iletişime geçecektir.' 
+                });
+            }
         }
 
         const newOrder = await createOrderInternal(req.body, req.ip);

@@ -33,5 +33,6 @@ const OrderSchema = new mongoose.Schema({
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ updatedAt: -1 });
 OrderSchema.index({ status: 1 });
+OrderSchema.index({ ip_address: 1 });
 
 module.exports = mongoose.model('Order', OrderSchema);
