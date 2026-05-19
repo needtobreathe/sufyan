@@ -617,7 +617,21 @@ app.get('*', async (req, res, next) => {
         }
     }
 
-    if (!subdomain) return res.status(404).send('Site Not Found');
+    if (!subdomain) {
+        return res.status(404).send(`
+            <div style="font-family: sans-serif; padding: 30px; background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; max-width: 600px; margin: 50px auto;">
+                <h2 style="color: #c53030; margin-top: 0;">🔍 Yaprak Site Hata Ayıklama (Debug)</h2>
+                <p><strong>Hata:</strong> Subdomain tespit edilemedi.</p>
+                <hr style="border: 0; border-top: 1px solid #feb2b2; margin: 20px 0;">
+                <ul style="line-height: 1.8;">
+                    <li><strong>Gelen Host:</strong> ${req.get('host')}</li>
+                    <li><strong>İstenen Path:</strong> ${req.path}</li>
+                    <li><strong>İstemci IP:</strong> ${req.ip}</li>
+                    <li><strong>Bağlı Port:</strong> ${PORT}</li>
+                </ul>
+            </div>
+        `);
+    }
 
         const site = await Site.findOne({ subdomain: subdomain.toLowerCase() }).populate('leafPageId');
         if (site && site.leafPageId) {
@@ -640,7 +654,25 @@ app.get('*', async (req, res, next) => {
              return res.send(html);
         }
         
-        res.status(404).send('Not Found');
+        // --- DETAILED DEBUG RESPONSE ON 404 ---
+        res.status(404).send(`
+            <div style="font-family: sans-serif; padding: 30px; background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 8px; max-width: 600px; margin: 50px auto;">
+                <h2 style="color: #2b6cb0; margin-top: 0;">🔍 Yaprak Site Hata Ayıklama (Debug)</h2>
+                <p><strong>Durum:</strong> İstek yaprak motoruna ulaştı ancak sayfa veritabanında bulunamadı.</p>
+                <hr style="border: 0; border-top: 1px solid #bee3f8; margin: 20px 0;">
+                <ul style="line-height: 1.8; list-style-type: square; padding-left: 20px;">
+                    <li><strong>Gelen Host:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${req.get('host')}</code></li>
+                    <li><strong>Ayıklanan Subdomain / Slug:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #b7791f; font-weight: bold;">${subdomain}</code></li>
+                    <li><strong>İstenen Path:</strong> <code>${req.path}</code></li>
+                    <li><strong>Veritabanında Site Eşleşmesi:</strong> ${site ? '✅ Bulundu' : '❌ Bulunamadı'}</li>
+                    <li><strong>Veritabanında Yaprak (LeafPage) Eşleşmesi:</strong> ${leafPage ? '✅ Bulundu' : '❌ Bulunamadı'}</li>
+                    <li><strong>Bağlı Port:</strong> <code>${PORT}</code></li>
+                </ul>
+                <div style="margin-top: 20px; font-size: 13px; color: #4a5568; background: #edf2f7; padding: 15px; border-radius: 6px;">
+                    💡 <strong>Çözüm Önerisi:</strong> Eğer bu sayfa bir yaprak sayfaysa, sufyan admin paneline girip <strong>"${subdomain}"</strong> slug adına sahip bir yaprak sayfa oluşturduğunuzdan veya bu subdomaini bir sayfaya atadığınızdan emin olun.
+                </div>
+            </div>
+        `);
     } catch (error) {
         console.error("Router Error:", error);
         res.status(500).send('Server Error');
