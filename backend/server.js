@@ -1817,6 +1817,16 @@ app.get('/api/orders', auth, async (req, res) => {
         const { date, status, search, limit, page } = req.query;
         let query = {};
         
+        // Sadece sufyan-yaprak veritabanında tanımlı olan LeafPage / Site slug'larına ait siparişleri getir
+        const activeLeafPages = await LeafPage.find({}, 'slug');
+        const activeSites = await Site.find({}, 'subdomain');
+        const allActiveSlugs = [
+            ...activeLeafPages.map(p => p.slug?.toLowerCase()),
+            ...activeSites.map(s => s.subdomain?.toLowerCase())
+        ].filter(Boolean);
+        
+        query.site_id = { $in: allActiveSlugs };
+        
         if (date) {
             const start = new Date(date);
             start.setHours(0, 0, 0, 0);
