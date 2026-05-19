@@ -28,7 +28,15 @@ app.use(express.text({ type: ['text/plain', 'application/json'], limit: '1mb' })
 
 // Subdomain Extraction Middleware
 app.use((req, res, next) => {
-    const host = req.get('host') || '';
+    // Öncelikle ters proxy üzerinden gelen asıl alan adını (X-Forwarded-Host) oku, yoksa normal hostu oku
+    const host = req.headers['x-forwarded-host'] || req.get('host') || '';
+    
+    // IP adresi veya localhost üzerinden doğrudan erişimde subdomain analizini atla
+    if (host.includes('127.0.0.1') || host.includes('localhost')) {
+        req.subdomain = null;
+        return next();
+    }
+
     let parts = host.split('.');
     
     // Remove www if present
