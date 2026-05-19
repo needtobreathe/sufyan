@@ -1,0 +1,288 @@
+Sippanelx Account
+2e5c976cbd0150781c91197c49ff2355
+Back to Sippanelx Account
+Overview
+
+Insights & Logs
+
+Team & Resources
+
+Networks
+Overview
+Connectors
+Routes
+Resolvers & Proxies
+
+Access controls
+
+Traffic policies
+
+Cloud & SaaS findings
+Email security
+
+Data loss prevention
+
+Browser isolation
+
+Reusable components
+
+Integrations
+Settings
+
+
+Give feedback
+← Back to tunnels
+Yaprak-Sunucu
+Overview
+CIDR routes
+
+Hostname routes
+
+Please note that this feature is currently under Beta release
+Published application routes
+Live logs
+Published application routes
+Allow your Tunnel to reach applications whose domains you connected to Cloudflare. 
+Manage connected domains
+This link opens in a new tab
+Add a published application route
+Number
+Published application routes
+Path
+Service
+Origin configurations
+Menu
+
+1
+backend.siparisyonet.store
+*
+http://localhost:5005
+0
+
+2
+backendviejo.siparisyonet.store
+*
+http://localhost:5013
+0
+
+3
+viejokahve.com.tr
+*
+http://localhost:5014
+0
+
+4
+viejocollegen.com.tr
+*
+http://localhost:5014
+0
+
+5
+vpsatis.shop
+*
+http://localhost:5006
+0
+
+6
+hurremyag.store
+*
+http://localhost:5006
+0
+
+7
+earzentona.store
+*
+http://localhost:5006
+0
+
+8
+corekotukrem.site
+*
+http://localhost:5006
+0
+
+9
+akasyasakiztr.shop
+*
+http://localhost:5006
+0
+
+10
+akoyainciserum.site
+*
+http://localhost:5006
+0
+
+11
+vitaarterycardioveratr.site
+*
+http://localhost:5006
+0
+
+12
+siglakapsul.shop
+*
+http://localhost:5006
+0
+
+13
+corekotusurubu.site
+*
+http://localhost:5006
+0
+
+14
+hurremsabun.shop
+*
+http://localhost:5006
+0
+
+15
+tarhunot.shop
+*
+http://localhost:5006
+0
+
+16
+acacialifesirkesi.site
+*
+http://localhost:5006
+0
+
+17
+kuyrukyagi.site
+*
+http://localhost:5006
+0
+
+18
+salyangozkrem.shop
+*
+http://localhost:5006
+0
+
+19
+cocukvitamin.site
+*
+http://localhost:5006
+0
+
+20
+balsarimsaksurubu.site
+*
+http://localhost:5006
+0
+
+21
+goguskrem.site
+*
+http://localhost:5006
+0
+
+22
+gurmarplus.shop
+*
+http://localhost:5006
+0
+
+23
+akasyagamiplus.site
+*
+http://localhost:5006
+0
+
+24
+balkanbackend.siparisyonet.store
+*
+http://localhost:5058
+0
+
+25
+*.acacialife.store
+*
+http://localhost:5006
+0
+
+26
+*.acacialife.online
+*
+http://localhost:5050
+0
+
+27
+*.acacialifebl.store
+*
+http://localhost:6005
+0
+
+28
+serhatbackendapi.siparisyonet.store
+*
+http://localhost:7000
+0
+
+29
+serhatparfumbackendapi.siparisyonet.store
+*
+http://localhost:8001
+0
+
+30
+qr.payidarcafe.com.tr
+*
+http://localhost:2500
+0
+
+31
+payidarcafe.com.tr
+*
+http://localhost:2500
+0
+
+32
+backend.terrabuy.site
+*
+http://localhost:7500
+0
+
+33
+panel.terrabuy.site
+*
+http://localhost:7502
+0
+
+34
+akneserum.terrabuy.site
+*
+http://localhost:7501
+0
+
+35
+panel.siparisyonet.store
+*
+http://localhost:4173
+0
+
+36
+sufyan.siparisyonet.store
+*
+http://localhost:4185
+0
+
+37
+test.terrabuy.site
+*
+http://localhost:9500
+0
+Catch-all rule:
+http_status:404
+
+Edit
+Support
+System status
+Careers
+Terms of Use
+Report Security Issues
+Privacy Policy
+Cookie Preferences
+© 2026 Cloudflare, Inc.
