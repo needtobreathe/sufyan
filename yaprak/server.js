@@ -78,7 +78,7 @@ app.post('/api/app-state', async (req, res) => {
 // 2. Order Submission (Local Backend)
 app.post('/api/orders', async (req, res) => {
     try {
-        const backendBase = (process.env.BACKEND_URL || 'http://localhost:5005') + '/api';
+        const backendBase = (process.env.BACKEND_URL || 'http://localhost:5085') + '/api';
         const clientIp = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
         const userAgent = req.headers['user-agent'] || '';
         
@@ -531,7 +531,7 @@ async function injectPixels(html, leafPage = null, site = null) {
 // Serve Static Images & Template Assets
 app.get('/images/:filename', async (req, res) => {
     try {
-        const backendBase = process.env.BACKEND_URL || 'http://localhost:5005';
+        const backendBase = process.env.BACKEND_URL || 'http://localhost:5085';
         const imgRes = await fetch(`${backendBase}/images/${req.params.filename}`);
         
         if (!imgRes.ok) {

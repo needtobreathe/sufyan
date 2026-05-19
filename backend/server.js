@@ -2080,6 +2080,9 @@ app.post('/api/orders', async (req, res) => {
         const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
         const deviceId = req.body.device_id;
         const cleanPhone = phone.replace(/\s/g, '');
+        
+        // Find product name in the request
+        const productName = req.body.product_name || req.body.product_package || (req.body.items && req.body.items[0]?.name);
 
         // Build $or conditions: block if ANY ONE matches
         const dupConditions = [];
@@ -2087,15 +2090,18 @@ app.post('/api/orders', async (req, res) => {
         if (deviceId && deviceId !== 'unknown') dupConditions.push({ device_id: deviceId });
         if (clientIp) dupConditions.push({ ip_address: clientIp });
 
-        if (dupConditions.length > 0) {
+        if (dupConditions.length > 0 && productName) {
             const existingOrder = await Order.findOne({
                 createdAt: { $gte: twentyFourHoursAgo },
-                $or: dupConditions
+                $or: dupConditions,
+                "items.name": productName
             });
 
             if (existingOrder) {
-                console.warn(`[Duplicate 24h] Sipariş engellendi -> Telefon: ${cleanPhone}, Device: ${deviceId}, IP: ${clientIp}`);
-                return res.status(429).json({ 
+                console.warn(`[Duplicate 24h] Aynı üründen sipariş engellendi -> Ürün: ${productName}, Telefon: ${cleanPhone}, Device: ${deviceId}, IP: ${clientIp}`);
+                // Return 200 status code instead of 429 so that reverse proxies (like Nginx) 
+                // do not intercept the request with custom HTML error pages, ensuring JSON can be parsed.
+                return res.status(200).json({ 
                     success: false, 
                     duplicate: true,
                     message: 'Siparişiniz daha önce alınmıştır. Müşteri temsilcimiz en kısa sürede sizinle iletişime geçecektir.' 

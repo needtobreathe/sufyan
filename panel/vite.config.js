@@ -14,19 +14,19 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5005',
+        target: 'http://127.0.0.1:5085',
         changeOrigin: true
       },
       '/p/': {
-        target: 'http://127.0.0.1:5006',
+        target: 'http://127.0.0.1:5086',
         changeOrigin: true
       },
       '/lp-assets': {
-        target: 'http://127.0.0.1:5006',
+        target: 'http://127.0.0.1:5086',
         changeOrigin: true
       },
       '/images': {
-        target: 'http://127.0.0.1:5005',
+        target: 'http://127.0.0.1:5085',
         changeOrigin: true
       }
     }

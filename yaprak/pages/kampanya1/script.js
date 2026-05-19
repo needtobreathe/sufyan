@@ -226,7 +226,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 400);
                 } else if (result.duplicate) {
                     // 24 saat kuralı: Mükerrer sipariş engellendi
-                    showDuplicateOrderModal();
+                    if (typeof showDuplicateOrderModal === 'function') {
+                        showDuplicateOrderModal();
+                    } else {
+                        alert(result.message || 'Siparişiniz daha önce alınmıştır. Müşteri temsilcimiz en kısa sürede sizinle iletişime geçecektir.');
+                    }
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                     isSubmitting = false;
