@@ -421,9 +421,7 @@ const formatTL = (val) => {
 
 const calculateAvgBasket = (dataObj) => {
   if (!dataObj || dataObj.count === 0) return 0
-  const validTotal = dataObj.count - (dataObj.cancelled || 0)
-  if (validTotal <= 0) return 0
-  return dataObj.revenue / validTotal
+  return dataObj.revenue / dataObj.count
 }
 
 const getSuccessRate = (count, cancelled) => {

@@ -30,6 +30,8 @@
             <th>Sayfa Adı</th>
             <th>İlişkili Ürün</th>
             <th>Uzantı (Slug)</th>
+            <th class="center-th">Bugünkü Sipariş</th>
+            <th class="center-th">Toplam Sipariş</th>
             <th>Bağlantı</th>
             <th>İşlemler</th>
           </tr>
@@ -51,6 +53,12 @@
               </span>
             </td>
             <td><code>{{ page.slug }}</code></td>
+            <td class="order-cell">
+              <span class="order-badge today" :class="{ 'zero': !page.ordersToday }">{{ page.ordersToday || 0 }}</span>
+            </td>
+            <td class="order-cell">
+              <span class="order-badge total">{{ page.ordersTotal || 0 }}</span>
+            </td>
             <td>
               <div class="link-action">
                 <a :href="getPageUrl(page)" target="_blank" class="preview-link">Görüntüle</a>
@@ -80,7 +88,7 @@
             </td>
           </tr>
           <tr v-if="leafPages.length === 0">
-            <td colspan="5" style="text-align: center; color: #999; padding: 40px;">Henüz bir yaprak sayfa oluşturulmamış.</td>
+            <td colspan="7" style="text-align: center; color: #999; padding: 40px;">Henüz bir yaprak sayfa oluşturulmamış.</td>
           </tr>
         </tbody>
       </table>
@@ -449,6 +457,41 @@ onUnmounted(() => {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
   70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.center-th { text-align: center; }
+
+.order-cell {
+  text-align: center;
+}
+
+.order-badge {
+  display: inline-block;
+  min-width: 32px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.order-badge.today {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.order-badge.today.zero {
+  background: #f9fafb;
+  color: #9ca3af;
+  border: 1px solid #e5e7eb;
+  font-weight: 500;
+}
+
+.order-badge.total {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
 }
 
 .pagination-footer {

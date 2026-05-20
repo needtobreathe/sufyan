@@ -1050,7 +1050,15 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
             { $group: {
                 _id: null,
                 count: { $sum: 1 },
-                revenue: { $sum: { $cond: [{ $in: ["$status", ['cancelled', '9', 'deleted']] }, 0, { $ifNull: ["$totalPrice", 0] }] } },
+                revenue: { $sum: { $cond: [
+                    { $in: ["$status", ['cancelled', '9', '10', '11', 'deleted']] },
+                    0,
+                    { $reduce: {
+                        input: "$items",
+                        initialValue: 0,
+                        in: { $add: ["$$value", { $multiply: [{ $ifNull: ["$$this.price", 0] }, { $ifNull: ["$$this.qty", 1] }] }] }
+                    }}
+                ]}},
                 pending: { $sum: { $cond: [{ $in: ["$status", ['pending', '1']] }, 1, 0] } },
                 processing: { $sum: { $cond: [{ $in: ["$status", ['approved', '2', 'preparing', '3']] }, 1, 0] } },
                 shipped: { $sum: { $cond: [{ $in: ["$status", ['shipped', '5', 'delivered', '12']] }, 1, 0] } },
@@ -1248,24 +1256,24 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
                 const itemRevenue = isCancelled ? 0 : (item.price || 0) * qty;
 
                 // Month
-                productMap[resolvedName].monthCount += 1;
+                productMap[resolvedName].monthCount += qty;
                 productMap[resolvedName].monthRevenue += itemRevenue;
 
                 // Week
                 if (orderDate >= startOfWeek) {
-                    productMap[resolvedName].weekCount += 1;
+                    productMap[resolvedName].weekCount += qty;
                     productMap[resolvedName].weekRevenue += itemRevenue;
                 }
 
                 // Today
                 if (orderDate >= startOfToday && orderDate <= endOfToday) {
-                    productMap[resolvedName].todayCount += 1;
+                    productMap[resolvedName].todayCount += qty;
                     productMap[resolvedName].todayRevenue += itemRevenue;
                 }
 
                 // Yesterday
                 if (orderDate >= startOfYesterday && orderDate <= endOfYesterday) {
-                    productMap[resolvedName].yesterdayCount += 1;
+                    productMap[resolvedName].yesterdayCount += qty;
                     productMap[resolvedName].yesterdayRevenue += itemRevenue;
                 }
             }
@@ -1630,48 +1638,63 @@ app.post('/api/import-images', auth, async (req, res) => {
 });
 
 // --- Leaf Pages Management ---
+
 app.get('/api/leaf-pages', auth, async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 50;
-        const skip = (page - 1) * limit;
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
 
-        const total = await LeafPage.countDocuments();
-        const leafPages = await LeafPage.find()
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
+    const total = await LeafPage.countDocuments();
+    const leafPages = await LeafPage.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-        // Calculate active users per slug in the last 60 seconds
-        const activeThreshold = new Date(Date.now() - 60 * 1000); 
-        const activeUsersCount = await EventLog.aggregate([
-            { $match: { timestamp: { $gte: activeThreshold } } },
-            { $group: { _id: "$site_id", users: { $addToSet: "$session_id" } } },
-            { $project: { _id: 1, count: { $size: "$users" } } }
-        ]);
+    // Active users in last 60 seconds
+    const activeThreshold = new Date(Date.now() - 60 * 1000);
+    const activeUsersCount = await EventLog.aggregate([
+      { $match: { timestamp: { $gte: activeThreshold } } },
+      { $group: { _id: "$site_id", users: { $addToSet: "$session_id" } } },
+      { $project: { _id: 1, count: { $size: "$users" } } }
+    ]);
+    const activeUsersMap = {};
+    activeUsersCount.forEach(row => { activeUsersMap[row._id] = row.count; });
 
-        const activeUsersMap = {};
-        activeUsersCount.forEach(row => {
-            activeUsersMap[row._id] = row.count;
-        });
+    // Today's order count per site
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayOrders = await Order.aggregate([
+      { $match: { createdAt: { $gte: todayStart } } },
+      { $group: { _id: "$site_id", count: { $sum: 1 } } }
+    ]);
+    const todayOrdersMap = {};
+    todayOrders.forEach(o => { todayOrdersMap[o._id] = o.count; });
 
-        const leafPagesWithActive = leafPages.map(page => {
-            return {
-                ...page.toObject(),
-                activeUsers: activeUsersMap[page.slug] || 0
-            };
-        });
+    // Total order count per site (all time)
+    const totalOrders = await Order.aggregate([
+      { $group: { _id: "$site_id", count: { $sum: 1 } } }
+    ]);
+    const totalOrdersMap = {};
+    totalOrders.forEach(o => { totalOrdersMap[o._id] = o.count; });
 
-        res.json({ 
-            success: true, 
-            leafPages: leafPagesWithActive,
-            total,
-            totalPages: Math.ceil(total / limit),
-            currentPage: page
-        });
-    } catch (error) {
-        res.status(500).json({ success: false });
-    }
+    const leafPagesWithActive = leafPages.map(page => ({
+      ...page.toObject(),
+      activeUsers: activeUsersMap[page.slug] || 0,
+      ordersToday: todayOrdersMap[page.slug] || 0,
+      ordersTotal: totalOrdersMap[page.slug] || 0,
+    }));
+
+    res.json({
+      success: true,
+      leafPages: leafPagesWithActive,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page
+    });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
 });
 
 // legacy-sites endpoint removed
