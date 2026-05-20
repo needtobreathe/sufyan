@@ -1056,7 +1056,7 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
                     { $reduce: {
                         input: "$items",
                         initialValue: 0,
-                        in: { $add: ["$$value", { $multiply: [{ $ifNull: ["$$this.price", 0] }, { $ifNull: ["$$this.qty", 1] }] }] }
+                        in: { $add: ["$$value", { $ifNull: ["$$this.price", 0] }] }
                     }}
                 ]}},
                 pending: { $sum: { $cond: [{ $in: ["$status", ['pending', '1']] }, 1, 0] } },
@@ -1124,7 +1124,7 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
             const orderDate = new Date(order.createdAt);
 
             // Calculate revenue for only the valid items of this order
-            const orderValidRevenue = isCancelled ? 0 : validItems.reduce((sum, item) => sum + (item.price || 0) * (item.qty || 1), 0);
+            const orderValidRevenue = isCancelled ? 0 : validItems.reduce((sum, item) => sum + (item.price || 0), 0);
 
             const isPending = ['pending', '1'].includes(order.status);
             const isProcessing = ['approved', '2', 'preparing', '3'].includes(order.status);
@@ -1253,7 +1253,7 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
                     };
                 }
 
-                const itemRevenue = isCancelled ? 0 : (item.price || 0) * qty;
+                const itemRevenue = isCancelled ? 0 : (item.price || 0);
 
                 // Month
                 productMap[resolvedName].monthCount += qty;
@@ -2793,7 +2793,7 @@ app.get('/api/reporting/daily-report', auth, async (req, res) => {
                     const isCancelled = cancelledStatuses.includes(st);
                     if (!isCancelled) {
                         productMap[key].qty += item.qty || 1;
-                        const itemRevenue = (item.price || productMap[key].unitPrice) * (item.qty || 1);
+                        const itemRevenue = (item.price || productMap[key].unitPrice);
                         const itemCost = productMap[key].unitCost * (item.qty || 1);
                         productMap[key].totalRevenue += itemRevenue;
                         productMap[key].totalCost += itemCost;
@@ -2972,7 +2972,7 @@ app.get('/api/reporting/performance', auth, async (req, res) => {
                     _id: "$items.name",
                     orderCount: { $addToSet: "$_id" },
                     totalQty: { $sum: "$items.qty" },
-                    totalRevenue: { $sum: { $multiply: ["$items.price", "$items.qty"] } }
+                    totalRevenue: { $sum: "$items.price" }
                 }},
                 { $project: {
                     name: "$_id",

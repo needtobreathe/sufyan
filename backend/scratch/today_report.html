@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Günlük Sipariş Dökümü – 20 Mayıs 2026</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #1e293b; padding: 32px; }
+
+    .report-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 32px 40px;
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      box-shadow: 0 8px 32px rgba(29,78,216,0.25);
+    }
+    .report-header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .report-header p { font-size: 13px; opacity: 0.75; margin-top: 4px; }
+    .report-header .generated { font-size: 12px; opacity: 0.6; text-align: right; }
+
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      border: 1px solid #e2e8f0;
+    }
+    .card-label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .card-value { font-size: 28px; font-weight: 800; color: #0f172a; }
+    .card-sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .card.green .card-value { color: #16a34a; }
+    .card.red .card-value { color: #dc2626; }
+    .card.blue .card-value { color: #1d4ed8; }
+
+    .table-wrapper {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+    .table-title {
+      padding: 18px 24px;
+      border-bottom: 1px solid #f1f5f9;
+      font-weight: 700;
+      font-size: 15px;
+      color: #0f172a;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #f8fafc;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr.row-cancelled { opacity: 0.5; }
+    td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+
+    .td-num { color: #94a3b8; font-size: 12px; width: 40px; }
+    .td-time { color: #64748b; white-space: nowrap; }
+    .td-name { font-weight: 600; }
+    .td-phone { color: #64748b; font-size: 12px; }
+    .td-price { font-weight: 700; color: #0f172a; text-align: right; white-space: nowrap; }
+    .td-site code { background: #f1f5f9; padding: 2px 7px; border-radius: 6px; font-size: 11px; color: #475569; }
+    .td-items { max-width: 260px; }
+
+    .item-chip {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 2px 2px;
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-preparing { background: #e0f2fe; color: #0369a1; }
+    .status-shipped { background: #dcfce7; color: #166534; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    @media print {
+      body { padding: 16px; background: white; }
+      .report-header { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="report-header">
+    <div>
+      <h1>📦 Günlük Sipariş Dökümü</h1>
+      <p>20 Mayıs 2026</p>
+    </div>
+    <div class="generated">Oluşturulma: 20.05.2026 19:03:34</div>
+  </div>
+
+  <div class="summary-cards">
+    <div class="card blue">
+      <div class="card-label">Toplam Sipariş</div>
+      <div class="card-value">90</div>
+      <div class="card-sub">5 iptal dahil</div>
+    </div>
+    <div class="card green">
+      <div class="card-label">Toplam Ciro</div>
+      <div class="card-value">₺66.115</div>
+      <div class="card-sub">İptal hariç</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Ortalama Sepet</div>
+      <div class="card-value">₺734,611</div>
+      <div class="card-sub">Tüm siparişler baz alındı</div>
+    </div>
+    <div class="card red">
+      <div class="card-label">İptal Sayısı</div>
+      <div class="card-value">5</div>
+      <div class="card-sub">%5.6 iptal oranı</div>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-title">Sipariş Listesi</div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Saat</th>
+          <th>Ad Soyad</th>
+          <th>Telefon</th>
+          <th>Ürünler</th>
+          <th style="text-align:right">Tutar</th>
+          <th>Durum</th>
+          <th>Sayfa</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr class="">
+          <td class="td-num">1</td>
+          <td class="td-time">00:45</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05538756900</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı ×4</span></td>
+          <td class="td-price">₺1.199</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">2</td>
+          <td class="td-time">01:19</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05538897604</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">3</td>
+          <td class="td-time">01:22</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05444039615</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">4</td>
+          <td class="td-time">02:09</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05358821636</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×6</span></td>
+          <td class="td-price">₺1.499</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">5</td>
+          <td class="td-time">03:01</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05306638183</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">6</td>
+          <td class="td-time">03:20</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05524139479</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">7</td>
+          <td class="td-time">03:32</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05323704138</td>
+          <td class="td-items"><span class="item-chip">Hürrem Sabun ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremsabun</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">8</td>
+          <td class="td-time">03:53</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05438981803</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">9</td>
+          <td class="td-time">04:02</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05530733757</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×6</span></td>
+          <td class="td-price">₺1.499</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">10</td>
+          <td class="td-time">04:06</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05413717002</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×3</span></td>
+          <td class="td-price">₺749</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">11</td>
+          <td class="td-time">04:23</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05445227477</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">12</td>
+          <td class="td-time">04:59</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05333215804</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">13</td>
+          <td class="td-time">05:17</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05366881219</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı</span></td>
+          <td class="td-price">₺399</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">14</td>
+          <td class="td-time">05:32</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05077540323</td>
+          <td class="td-items"><span class="item-chip">Zentona Damlası</span></td>
+          <td class="td-price">₺699</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>zentona</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">15</td>
+          <td class="td-time">05:40</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05364177425</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×4</span></td>
+          <td class="td-price">₺1.199</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">16</td>
+          <td class="td-time">06:18</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05368746063</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">17</td>
+          <td class="td-time">06:19</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05365217454</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">18</td>
+          <td class="td-time">06:32</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05395784987</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">19</td>
+          <td class="td-time">07:09</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05428077733</td>
+          <td class="td-items"><span class="item-chip">Akasya Şurup Plus ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>akasyasurub</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">20</td>
+          <td class="td-time">07:29</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05383675307</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×6</span></td>
+          <td class="td-price">₺1.499</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">21</td>
+          <td class="td-time">07:36</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05078046438</td>
+          <td class="td-items"><span class="item-chip">Hürrem Sabun</span></td>
+          <td class="td-price">₺399</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremsabun</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">22</td>
+          <td class="td-time">07:36</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05345506767</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">23</td>
+          <td class="td-time">07:55</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05359239895</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">24</td>
+          <td class="td-time">07:56</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05389420960</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="row-cancelled">
+          <td class="td-num">25</td>
+          <td class="td-time">08:12</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05323174796</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-cancelled">İptal</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="row-cancelled">
+          <td class="td-num">26</td>
+          <td class="td-time">08:21</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05325672977</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-cancelled">İptal</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="row-cancelled">
+          <td class="td-num">27</td>
+          <td class="td-time">08:25</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05348482121</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-cancelled">İptal</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">28</td>
+          <td class="td-time">08:38</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05368828403</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">29</td>
+          <td class="td-time">08:48</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05496222447</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×4</span></td>
+          <td class="td-price">₺999</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">30</td>
+          <td class="td-time">09:19</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05386137972</td>
+          <td class="td-items"><span class="item-chip">Zentona Damlası</span></td>
+          <td class="td-price">₺699</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>zentona</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">31</td>
+          <td class="td-time">10:01</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05548560777</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×3</span></td>
+          <td class="td-price">₺749</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">32</td>
+          <td class="td-time">10:10</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05545179741</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">33</td>
+          <td class="td-time">10:29</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05364039004</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="row-cancelled">
+          <td class="td-num">34</td>
+          <td class="td-time">10:31</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05398481703</td>
+          <td class="td-items"><span class="item-chip">Zentona Damlası</span></td>
+          <td class="td-price">₺699</td>
+          <td><span class="status-badge status-cancelled">İptal</span></td>
+          <td class="td-site"><code>zentona</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">35</td>
+          <td class="td-time">10:32</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05324234770</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">36</td>
+          <td class="td-time">10:33</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05060619981</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">37</td>
+          <td class="td-time">10:43</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05305677944</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">38</td>
+          <td class="td-time">10:53</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05322676549</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×6</span></td>
+          <td class="td-price">₺1.499</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">39</td>
+          <td class="td-time">11:09</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05076913519</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">40</td>
+          <td class="td-time">11:17</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05464301825</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">41</td>
+          <td class="td-time">11:30</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05305613275</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">42</td>
+          <td class="td-time">11:54</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05323535853</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">43</td>
+          <td class="td-time">12:14</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05376239679</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×6</span></td>
+          <td class="td-price">₺1.499</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">44</td>
+          <td class="td-time">12:17</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05339699275</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">45</td>
+          <td class="td-time">12:45</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05355689874</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×3</span></td>
+          <td class="td-price">₺749</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">46</td>
+          <td class="td-time">12:46</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05413207020</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">47</td>
+          <td class="td-time">12:57</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05514921679</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">48</td>
+          <td class="td-time">13:11</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05461880048</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">49</td>
+          <td class="td-time">13:31</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05441636657</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">50</td>
+          <td class="td-time">13:34</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05367729723</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı</span></td>
+          <td class="td-price">₺399</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">51</td>
+          <td class="td-time">13:47</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05518724539</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">52</td>
+          <td class="td-time">13:48</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05415815973</td>
+          <td class="td-items"><span class="item-chip">Akasya Şurup Plus ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>akasyasurub</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">53</td>
+          <td class="td-time">13:50</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05466227962</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">54</td>
+          <td class="td-time">13:59</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05432842248</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">55</td>
+          <td class="td-time">14:04</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05374899400</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">56</td>
+          <td class="td-time">14:29</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05369609986</td>
+          <td class="td-items"><span class="item-chip">Zentona Damlası</span></td>
+          <td class="td-price">₺699</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>zentona</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">57</td>
+          <td class="td-time">14:32</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05354673466</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×4</span></td>
+          <td class="td-price">₺1.199</td>
+          <td><span class="status-badge status-shipped">Kargoya Verildi</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">58</td>
+          <td class="td-time">14:47</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05324205923</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="row-cancelled">
+          <td class="td-num">59</td>
+          <td class="td-time">14:55</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05382556177</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-cancelled">İptal</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">60</td>
+          <td class="td-time">15:13</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05321553203</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">61</td>
+          <td class="td-time">15:18</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05317064026</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">62</td>
+          <td class="td-time">15:26</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05324609782</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">63</td>
+          <td class="td-time">15:38</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05446912688</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">64</td>
+          <td class="td-time">15:44</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05324833539</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">65</td>
+          <td class="td-time">15:54</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05442636349</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×4</span></td>
+          <td class="td-price">₺999</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">66</td>
+          <td class="td-time">15:55</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05053549084</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı ×4</span></td>
+          <td class="td-price">₺1.199</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">67</td>
+          <td class="td-time">15:57</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05530168056</td>
+          <td class="td-items"><span class="item-chip">Hürrem Sabun</span></td>
+          <td class="td-price">₺399</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>hurremsabun</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">68</td>
+          <td class="td-time">16:14</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05380357471</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×3</span></td>
+          <td class="td-price">₺749</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">69</td>
+          <td class="td-time">16:19</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05356982009</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">70</td>
+          <td class="td-time">16:21</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05394687993</td>
+          <td class="td-items"><span class="item-chip">Akasya Şurup Plus ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>akasyasurub</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">71</td>
+          <td class="td-time">16:31</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05398393574</td>
+          <td class="td-items"><span class="item-chip">Akasya Şurup Plus ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>akasyasurub</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">72</td>
+          <td class="td-time">16:35</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05323521207</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera</span></td>
+          <td class="td-price">₺399</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">73</td>
+          <td class="td-time">16:36</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05415655492</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">74</td>
+          <td class="td-time">16:52</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05324360725</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">75</td>
+          <td class="td-time">16:53</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05333150858</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı</span></td>
+          <td class="td-price">₺549</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">76</td>
+          <td class="td-time">16:54</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05354089831</td>
+          <td class="td-items"><span class="item-chip">Sığla Ağacı ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>sigla</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">77</td>
+          <td class="td-time">17:03</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05322439645</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">78</td>
+          <td class="td-time">17:05</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05302922466</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">79</td>
+          <td class="td-time">17:17</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05369800775</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">80</td>
+          <td class="td-time">17:40</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05346434401</td>
+          <td class="td-items"><span class="item-chip">Akasya Şurup Plus ×4</span></td>
+          <td class="td-price">₺1.199</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>akasyasurub</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">81</td>
+          <td class="td-time">17:45</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05387736822</td>
+          <td class="td-items"><span class="item-chip">Hürrem Sabun ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>hurremsabun</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">82</td>
+          <td class="td-time">17:52</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05322114143</td>
+          <td class="td-items"><span class="item-chip">Hürrem Sabun ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>hurremsabun</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">83</td>
+          <td class="td-time">17:56</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05312096056</td>
+          <td class="td-items"><span class="item-chip">Akasya Şurup Plus ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>akasyasurub</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">84</td>
+          <td class="td-time">18:00</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05372557854</td>
+          <td class="td-items"><span class="item-chip">AnxietyCorrector ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>anxietycorrector</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">85</td>
+          <td class="td-time">18:29</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05363736193</td>
+          <td class="td-items"><span class="item-chip">Hürrem Yağı ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-preparing">Hazırlanıyor</span></td>
+          <td class="td-site"><code>hurremyag</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">86</td>
+          <td class="td-time">18:37</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05353891705</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">87</td>
+          <td class="td-time">18:41</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05333833589</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu ×6</span></td>
+          <td class="td-price">₺1.499</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">88</td>
+          <td class="td-time">18:43</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05355284501</td>
+          <td class="td-items"><span class="item-chip">Gurmar Plus Acacia Life ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>gurmar</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">89</td>
+          <td class="td-time">18:47</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05355988544</td>
+          <td class="td-items"><span class="item-chip">Bal Sarımsak Şurubu ×2</span></td>
+          <td class="td-price">₺899</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>sarimsak</code></td>
+        </tr>
+        <tr class="">
+          <td class="td-num">90</td>
+          <td class="td-time">18:53</td>
+          <td class="td-name">—</td>
+          <td class="td-phone">05376208472</td>
+          <td class="td-items"><span class="item-chip">Vita Artery Cardio Vera ×2</span></td>
+          <td class="td-price">₺599</td>
+          <td><span class="status-badge status-pending">Yeni</span></td>
+          <td class="td-site"><code>vita</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Sufyan Panel – 20 Mayıs 2026 tarihli sipariş raporu &nbsp;|&nbsp; Toplam 90 sipariş
+  </div>
+
+</body>
+</html>
