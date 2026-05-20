@@ -108,6 +108,69 @@
         </div>
       </div>
 
+      <!-- PRODUCT-BASED SALES & REVENUE ANALYSIS -->
+      <div class="dashboard-section product-stats-section">
+        <div class="section-header">
+          <div class="header-left">
+            <h3>Ürün Bazlı Satış ve Ciro Analizi</h3>
+            <p class="section-subtitle">Ürün bazında anlık sipariş adetleri ve ciro kırılımları</p>
+          </div>
+          <div class="header-right">
+            <input 
+              v-model="productSearch" 
+              type="text" 
+              placeholder="Ürün ara..." 
+              class="search-input"
+            />
+            <select v-model="productPeriod" class="period-select">
+              <option value="today">Bugün</option>
+              <option value="yesterday">Dün</option>
+              <option value="week">Bu Hafta</option>
+              <option value="month">Bu Ay</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Ürün Adı</th>
+                <th class="text-right">Sipariş (Adet)</th>
+                <th class="text-right">Birim Fiyat</th>
+                <th class="text-right">Net Ciro</th>
+                <th class="text-right">Pay / Oran</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="prod in filteredProductStats" :key="prod.name">
+                <td class="product-name-cell">
+                  <span class="p-avatar">📦</span>
+                  <span class="p-name">{{ prod.name }}</span>
+                </td>
+                <td class="text-right font-bold text-blue-deep">
+                  {{ prod.count }} Adet
+                </td>
+                <td class="text-right font-bold text-green-deep">
+                  {{ formatTL(prod.revenue) }}
+                </td>
+                <td class="text-right">
+                  <div class="progress-bar-container">
+                    <span class="progress-percentage">%{{ prod.share }}</span>
+                    <div class="progress-bar">
+                      <div class="progress-fill" :style="{ width: prod.share + '%' }"></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="filteredProductStats.length === 0">
+                <td colspan="4" class="empty-row">Seçilen kriterlere uygun ürün satışı bulunamadı.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- BOTTOM ROW: WEEKLY TABLE & LAST 10 ORDERS -->
       <div class="bottom-grid">
         <!-- Haftalık Performans Çizelgesi -->
@@ -224,7 +287,8 @@ const statsData = ref({
   yesterday: { count: 0, revenue: 0, pending: 0, processing: 0, shipped: 0, cancelled: 0 },
   week: { count: 0, revenue: 0, pending: 0, processing: 0, shipped: 0, cancelled: 0 },
   month: { count: 0, revenue: 0, pending: 0, processing: 0, shipped: 0, cancelled: 0 },
-  weeklyData: []
+  weeklyData: [],
+  productStats: []
 })
 
 const employeePerformance = ref([])
@@ -234,6 +298,59 @@ const isChartReady = ref(false)
 
 const liveVisitors = computed(() => {
   return statsData.value.visitors?.filter(s => s.live > 0) || []
+})
+
+const productSearch = ref('')
+const productPeriod = ref('month')
+
+const filteredProductStats = computed(() => {
+  const rawList = statsData.value.productStats || []
+  const period = productPeriod.value
+  const query = productSearch.value.toLowerCase().trim()
+
+  let mappedList = rawList.map(prod => {
+    let count = 0
+    let revenue = 0
+    if (period === 'today') {
+      count = prod.todayCount || 0
+      revenue = prod.todayRevenue || 0
+    } else if (period === 'yesterday') {
+      count = prod.yesterdayCount || 0
+      revenue = prod.yesterdayRevenue || 0
+    } else if (period === 'week') {
+      count = prod.weekCount || 0
+      revenue = prod.weekRevenue || 0
+    } else {
+      count = prod.monthCount || 0
+      revenue = prod.monthRevenue || 0
+    }
+
+    return {
+      name: prod.name,
+      count,
+      revenue
+    }
+  })
+
+  // Filter out products with 0 count in that period
+  mappedList = mappedList.filter(prod => prod.count > 0)
+
+  // Filter by search query
+  if (query) {
+    mappedList = mappedList.filter(prod => prod.name.toLowerCase().includes(query))
+  }
+
+  // Sort by revenue descending
+  mappedList.sort((a, b) => b.revenue - a.revenue)
+
+  // Calculate total revenue for share percentage
+  const totalRevenue = mappedList.reduce((sum, p) => sum + p.revenue, 0)
+
+  // Add share percentage
+  return mappedList.map(prod => ({
+    ...prod,
+    share: totalRevenue > 0 ? ((prod.revenue / totalRevenue) * 100).toFixed(0) : 0
+  }))
 })
 
 // Chart Configurations
@@ -668,5 +785,100 @@ h3 { margin: 0; font-size: 16px; font-weight: 700; color: #1e293b; letter-spacin
 @media (max-width: 650px) {
   .metrics-grid { grid-template-columns: 1fr; }
   .stat-breakdown { flex-wrap: wrap; gap: 8px; }
+}
+
+/* Product Stats Section */
+.product-stats-section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.02);
+  border: 1px solid #f1f5f9;
+}
+.section-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+.search-input {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  width: 180px;
+  outline: none;
+  transition: all 0.2s;
+}
+.search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.period-select {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+}
+.period-select:focus {
+  border-color: #3b82f6;
+}
+.header-right {
+  display: flex;
+  gap: 12px;
+}
+.text-right {
+  text-align: right !important;
+}
+.product-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.p-avatar {
+  font-size: 16px;
+}
+.p-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+.text-blue-deep {
+  color: #2563eb;
+}
+.text-green-deep {
+  color: #10b981;
+}
+.font-bold {
+  font-weight: 700;
+}
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.progress-percentage {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  min-width: 32px;
+}
+.progress-bar {
+  width: 80px;
+  height: 6px;
+  background-color: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+  border-radius: 3px;
+  transition: width 0.3s ease;
 }
 </style>

@@ -1061,30 +1061,10 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
         const activeThreshold = new Date(Date.now() - 60 * 1000); // 60 seconds
         
         const [
-            todayRes, yesterdayRes, weekRes, monthRes, performanceRaw, weeklyAggRes, 
-            todayVisitorsBySite, liveVisitorsBySite, leafPages
+            dbProducts, monthlyOrders, todayVisitorsBySite, liveVisitorsBySite, leafPages
         ] = await Promise.all([
-            Order.aggregate(buildStatPipeline({ $gte: startOfToday, $lte: endOfToday })),
-            Order.aggregate(buildStatPipeline({ $gte: startOfYesterday, $lte: endOfYesterday })),
-            Order.aggregate(buildStatPipeline({ $gte: startOfWeek, $lte: endOfToday })),
-            Order.aggregate(buildStatPipeline({ $gte: startOfMonth, $lte: endOfToday })),
-            Order.aggregate([
-                { $match: { updatedAt: { $gte: startOfToday, $lte: endOfToday }, status: { $in: ['approved', '2', 'preparing', '3', 'shipped', '5', 'delivered', '12', 'cancelled', '9', '10', '11'] } } },
-                { $group: {
-                    _id: "$processedBy",
-                    approved: { $sum: { $cond: [{ $in: ["$status", ['approved', '2', 'preparing', '3', 'shipped', '5', 'delivered', '12']] }, 1, 0] } },
-                    cancelled: { $sum: { $cond: [{ $in: ["$status", ['cancelled', '9', '10', '11']] }, 1, 0] } }
-                }},
-                { $project: { name: { $ifNull: ["$_id", "Bilinmiyor"] }, approved: 1, cancelled: 1, _id: 0 } }
-            ]),
-            Order.aggregate([
-                { $match: { createdAt: { $gte: startOfWeek, $lte: endOfToday } } },
-                { $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "Europe/Istanbul" } },
-                    count: { $sum: 1 },
-                    cancelled: { $sum: { $cond: [{ $in: ["$status", ['cancelled', '9', '10', '11']] }, 1, 0] } }
-                }}
-            ]),
+            Product.find({}, 'name').lean(),
+            Order.find({ createdAt: { $gte: startOfMonth } }).lean(),
             EventLog.aggregate([
                 { $match: { timestamp: { $gte: startOfToday }, event_name: 'page_view' } },
                 { $group: { _id: "$site_id", count: { $addToSet: "$device_id" } } },
@@ -1098,20 +1078,106 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
             LeafPage.find({}, 'name slug').lean()
         ]);
 
-        const emptyStat = { count: 0, revenue: 0, pending: 0, processing: 0, shipped: 0, cancelled: 0 };
+        const dbProductNames = new Set((dbProducts || []).map(p => p.name));
+
+        const emptyStat = () => ({ count: 0, revenue: 0, pending: 0, processing: 0, shipped: 0, cancelled: 0 });
         const updatedStats = {
-            today: todayRes[0] || emptyStat,
-            yesterday: yesterdayRes[0] || emptyStat,
-            week: weekRes[0] || emptyStat,
-            month: monthRes[0] || emptyStat
+            today: emptyStat(),
+            yesterday: emptyStat(),
+            week: emptyStat(),
+            month: emptyStat()
         };
 
-        const performance = performanceRaw.filter(p => !!p.name && p.name !== "Bilinmiyor" && (p.approved > 0 || p.cancelled > 0));
-
+        const performanceMap = {};
         const weeklyDataMap = {};
-        for (let r of weeklyAggRes) {
-             weeklyDataMap[r._id] = r;
+
+        for (const order of monthlyOrders || []) {
+            const validItems = (order.items || []).filter(item => {
+                const itemName = item.name || 'Bilinmeyen Ürün';
+                
+                // Resolve name using leafPages
+                let resolvedName = itemName;
+                const page = leafPages.find(lp => lp.slug === order.site_id);
+                if (page) {
+                    const isPackage = page.products?.some(pkg => pkg.name === itemName);
+                    const hasKeywords = itemName.toLowerCase().includes('kutu') || itemName.toLowerCase().includes('adet');
+                    if (isPackage || hasKeywords) {
+                        resolvedName = page.productName || itemName;
+                    }
+                }
+                
+                return dbProductNames.has(resolvedName);
+            });
+            
+            // If the order has NO valid products from the products table, completely ignore it!
+            if (validItems.length === 0) continue;
+
+            const isCancelled = ['cancelled', '9', '10', '11', 'deleted'].includes(order.status);
+            const orderDate = new Date(order.createdAt);
+
+            // Calculate revenue for only the valid items of this order
+            const orderValidRevenue = isCancelled ? 0 : validItems.reduce((sum, item) => sum + (item.price || 0) * (item.qty || 1), 0);
+
+            const isPending = ['pending', '1'].includes(order.status);
+            const isProcessing = ['approved', '2', 'preparing', '3'].includes(order.status);
+            const isShipped = ['shipped', '5', 'delivered', '12'].includes(order.status);
+            const isOrderCancelled = ['cancelled', '9', '10', '11'].includes(order.status);
+
+            const addStats = (target) => {
+                target.count += 1;
+                target.revenue += orderValidRevenue;
+                if (isPending) target.pending += 1;
+                if (isProcessing) target.processing += 1;
+                if (isShipped) target.shipped += 1;
+                if (isOrderCancelled) target.cancelled += 1;
+            };
+
+            // Month
+            addStats(updatedStats.month);
+
+            // Week
+            if (orderDate >= startOfWeek) {
+                addStats(updatedStats.week);
+            }
+
+            // Today
+            if (orderDate >= startOfToday && orderDate <= endOfToday) {
+                addStats(updatedStats.today);
+
+                // Representative Performance (Only calculated for today's valid orders)
+                const repName = order.processedBy || "Bilinmiyor";
+                if (!performanceMap[repName]) {
+                    performanceMap[repName] = { name: repName, approved: 0, cancelled: 0 };
+                }
+                if (['approved', '2', 'preparing', '3', 'shipped', '5', 'delivered', '12'].includes(order.status)) {
+                    performanceMap[repName].approved += 1;
+                } else if (['cancelled', '9', '10', '11'].includes(order.status)) {
+                    performanceMap[repName].cancelled += 1;
+                }
+            }
+
+            // Yesterday
+            if (orderDate >= startOfYesterday && orderDate <= endOfYesterday) {
+                addStats(updatedStats.yesterday);
+            }
+
+            // Weekly performance data per day
+            if (orderDate >= startOfWeek) {
+                const trStr = orderDate.toLocaleString('en-US', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'numeric', day: 'numeric' });
+                const [m, day, y] = trStr.split('/');
+                const dayStr = `${y}-${m.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+                if (!weeklyDataMap[dayStr]) {
+                    weeklyDataMap[dayStr] = { count: 0, cancelled: 0 };
+                }
+                weeklyDataMap[dayStr].count += 1;
+                if (isOrderCancelled) {
+                    weeklyDataMap[dayStr].cancelled += 1;
+                }
+            }
         }
+
+        const performance = Object.values(performanceMap).filter(p => p.name !== "Bilinmiyor" && (p.approved > 0 || p.cancelled > 0));
 
         const weeklyData = [];
         for (let i = 6; i >= 0; i--) {
@@ -1141,12 +1207,78 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
             };
         });
 
+        // 2. Calculate Product Stats
+        const productMap = {};
+        for (const order of monthlyOrders || []) {
+            const isCancelled = ['cancelled', '9', '10', '11', 'deleted'].includes(order.status);
+            const orderDate = new Date(order.createdAt);
+            
+            for (const item of order.items || []) {
+                const itemName = item.name || 'Bilinmeyen Ürün';
+                const qty = item.qty || 1;
+                
+                // Resolve name using leafPages
+                let resolvedName = itemName;
+                const page = leafPages.find(lp => lp.slug === order.site_id);
+                if (page) {
+                    const isPackage = page.products?.some(pkg => pkg.name === itemName);
+                    const hasKeywords = itemName.toLowerCase().includes('kutu') || itemName.toLowerCase().includes('adet');
+                    if (isPackage || hasKeywords) {
+                        resolvedName = page.productName || itemName;
+                    }
+                }
+                
+                // Keep only products in the Product collection!
+                if (!dbProductNames.has(resolvedName)) continue;
+
+                if (!productMap[resolvedName]) {
+                    productMap[resolvedName] = {
+                        name: resolvedName,
+                        todayCount: 0,
+                        todayRevenue: 0,
+                        yesterdayCount: 0,
+                        yesterdayRevenue: 0,
+                        weekCount: 0,
+                        weekRevenue: 0,
+                        monthCount: 0,
+                        monthRevenue: 0
+                    };
+                }
+
+                const itemRevenue = isCancelled ? 0 : (item.price || 0) * qty;
+
+                // Month
+                productMap[resolvedName].monthCount += 1;
+                productMap[resolvedName].monthRevenue += itemRevenue;
+
+                // Week
+                if (orderDate >= startOfWeek) {
+                    productMap[resolvedName].weekCount += 1;
+                    productMap[resolvedName].weekRevenue += itemRevenue;
+                }
+
+                // Today
+                if (orderDate >= startOfToday && orderDate <= endOfToday) {
+                    productMap[resolvedName].todayCount += 1;
+                    productMap[resolvedName].todayRevenue += itemRevenue;
+                }
+
+                // Yesterday
+                if (orderDate >= startOfYesterday && orderDate <= endOfYesterday) {
+                    productMap[resolvedName].yesterdayCount += 1;
+                    productMap[resolvedName].yesterdayRevenue += itemRevenue;
+                }
+            }
+        }
+        const productStats = Object.values(productMap).sort((a, b) => b.monthRevenue - a.monthRevenue);
+
         res.json({
             success: true,
             stats: {
                 ...updatedStats,
                 visitors: visitorStats,
-                weeklyData: weeklyData
+                weeklyData: weeklyData,
+                productStats: productStats
             },
             performance: performance
         });
@@ -1173,7 +1305,7 @@ app.get('/api/get_order_counts.php', auth, async (req, res) => {
 
         const [
             total, newCount, preparing, cancelled, future, shipped, deliveredCount, returnedCount,
-            today, week, month, approved, social, ulasCount, instaCount, fbCount, productAgg, activeProducts, allLeafPages
+            today, week, month, approved, social, ulasCount, instaCount, fbCount, productAgg, dbProducts, allLeafPages
         ] = await Promise.all([
             Order.countDocuments({}),
             Order.countDocuments({ status: { $in: ['pending', '1'] } }),
@@ -1195,7 +1327,7 @@ app.get('/api/get_order_counts.php', auth, async (req, res) => {
                 { $unwind: "$items" },
                 { $group: { _id: { name: "$items.name", site_id: "$site_id" }, count: { $sum: 1 } } }
             ]),
-            Product.find({ active: true }, 'name'),
+            Product.find({}, 'name'),
             LeafPage.find({}, 'slug productName products')
         ]);
         
@@ -1222,18 +1354,13 @@ app.get('/api/get_order_counts.php', auth, async (req, res) => {
             productCountsMap[finalName] = (productCountsMap[finalName] || 0) + p.count;
         });
         
-        const finalProductCounts = activeProducts.map(p => ({
+        // Keep ONLY products that exist in our database Product table!
+        const finalProductCounts = dbProducts.map(p => ({
             name: p.name,
             count: productCountsMap[p.name] || 0
-        }));
+        })).filter(p => p.count > 0);
 
-        // Also add products from aggregate that might be deleted or from landing pages but have valid names
-        Object.keys(productCountsMap).forEach(key => {
-            if (!finalProductCounts.find(p => p.name === key)) {
-                finalProductCounts.push({ name: key, count: productCountsMap[key] });
-            }
-        });
-        // Sort final list again
+        // Sort final list again by count descending
         finalProductCounts.sort((a, b) => b.count - a.count);
 
         res.json({
@@ -2085,6 +2212,16 @@ app.post('/api/orders', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Lütfen tüm zorunlu alanları doldurun.' });
         }
 
+        // --- VALIDATION: CHECK IF PRODUCT/PAGE EXISTS IN THIS DATABASE ---
+        const siteId = req.body.siteId || 'default';
+        if (siteId !== 'default') {
+            const activePage = await LeafPage.findOne({ slug: siteId.toLowerCase() });
+            if (!activePage) {
+                console.warn(`[Blocked Unauthorized Order] Bilinmeyen/Yabancı ürün slug'ı ile sipariş engellendi: ${siteId}`);
+                return res.status(400).json({ success: false, message: 'Geçersiz ürün veya sayfa kimliği.' });
+            }
+        }
+
         // --- 24 SAAT MÜKERRER SİPARİŞ KONTROLÜ ---
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
@@ -2121,7 +2258,7 @@ app.post('/api/orders', async (req, res) => {
 
         const newOrder = await createOrderInternal(req.body, req.ip);
         
-        // Fetch product/page-specific phone number for the success page
+        // Fetch product/page-specific details (TikTok Pixel) but enforce global WhatsApp phone
         let productPhone = '';
         let tiktokPixelId = '';
         let tiktokAccessToken = '';
@@ -2131,16 +2268,16 @@ app.post('/api/orders', async (req, res) => {
             if (siteId !== 'default') {
                 const lp = await LeafPage.findOne({ slug: siteId.toLowerCase() });
                 if (lp) {
-                    if (lp.phone) productPhone = lp.phone;
+                    // We no longer read productPhone from the individual page settings as requested.
                     if (lp.tiktokPixelId) tiktokPixelId = lp.tiktokPixelId;
                     if (lp.tiktokAccessToken) tiktokAccessToken = lp.tiktokAccessToken;
                 }
             }
             
-            // Fallback to global setting if no page-specific phone found
-            if (!productPhone) {
-                const wpSetting = await GlobalSetting.findOne({ key: 'active_wp_number' });
-                if (wpSetting) productPhone = wpSetting.value;
+            // Always use the global active WhatsApp number for confirmation
+            const wpSetting = await GlobalSetting.findOne({ key: 'active_wp_number' });
+            if (wpSetting) {
+                productPhone = wpSetting.value;
             }
         } catch (err) {
             console.error('Error fetching page details:', err);
