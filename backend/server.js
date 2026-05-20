@@ -1972,7 +1972,8 @@ app.get('/api/orders', auth, async (req, res) => {
         const activeSites = await Site.find({}, 'subdomain');
         const allActiveSlugs = [
             ...activeLeafPages.map(p => p.slug?.toLowerCase()),
-            ...activeSites.map(s => s.subdomain?.toLowerCase())
+            ...activeSites.map(s => s.subdomain?.toLowerCase()),
+            'manual'
         ].filter(Boolean);
         
         query.site_id = { $in: allActiveSlugs };

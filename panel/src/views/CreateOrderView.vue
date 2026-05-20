@@ -229,8 +229,8 @@ const order = ref({
   district: 0,
   address: '',
   paymentMethod: 1,
-  siteId: 1,
-  status: 1,
+  siteId: 'manual',
+  status: '1',
   products: [
     { id: '', quantity: 1, price: 0 }
   ],
@@ -239,15 +239,15 @@ const order = ref({
 })
 
 const statusOptions = [
-  { id: 1, label: 'Yeni Sipariş' },
-  { id: 2, label: 'Onaylandı' },
-  { id: 3, label: 'Hazırlanıyor' },
-  { id: 4, label: 'Paketlendi' },
-  { id: 5, label: 'Kargoya Verildi' },
-  { id: 14, label: 'Instagram DM' },
-  { id: 15, label: 'Facebook DM' },
-  { id: 16, label: 'İleri Tarihli' },
-  { id: 9, label: 'İptal' }
+  { id: '1', label: 'Yeni Sipariş' },
+  { id: '2', label: 'Onaylandı' },
+  { id: '3', label: 'Hazırlanıyor' },
+  { id: '4', label: 'Paketlendi' },
+  { id: '5', label: 'Kargoya Verildi' },
+  { id: '14', label: 'Instagram DM' },
+  { id: '15', label: 'Facebook DM' },
+  { id: '16', label: 'İleri Tarihli' },
+  { id: '9', label: 'İptal' }
 ]
 
 // Phone Formatting Watcher
