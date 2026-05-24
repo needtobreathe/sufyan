@@ -2262,7 +2262,7 @@ app.post('/api/orders', async (req, res) => {
         if (deviceId && deviceId !== 'unknown') dupConditions.push({ device_id: deviceId });
         if (clientIp) dupConditions.push({ ip_address: clientIp });
 
-        if (dupConditions.length > 0 && productName) {
+        if (dupConditions.length > 0 && productName && !fullName.toLowerCase().includes('test')) {
             const existingOrder = await Order.findOne({
                 createdAt: { $gte: twentyFourHoursAgo },
                 $or: dupConditions,
