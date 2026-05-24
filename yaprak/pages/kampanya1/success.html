@@ -376,6 +376,32 @@ Siparişimi onaylamak istiyorum. En kısa sürede kargolanmasını rica ederim.`
             if (orderDataStr) {
                 try {
                     const orderData = JSON.parse(orderDataStr);
+                    
+                    // Sadece sipariş yeni oluşturulmuşsa ve henüz PlaceAnOrder gönderilmemişse
+                    if (typeof ttq !== 'undefined' && orderData.eventId && !orderData.paoFired) {
+                        const rawPrice = String(orderData.totalPrice || "0").replace(',', '.');
+                        const totalPrice = parseFloat(rawPrice) || 0;
+                        const productName = orderData.product_name || 'Ürün';
+                        
+                        const ttPayload = {
+                            "contents": [
+                                {
+                                    "content_name": productName,
+                                    "content_id": orderData.siteId || 'default',
+                                    "content_type": "product_group"
+                                }
+                            ],
+                            "value": totalPrice,
+                            "currency": "TRY"
+                        };
+                        
+                        ttq.track('PlaceAnOrder', ttPayload, { event_id: orderData.eventId + '_pao' });
+                        console.log('%c[TİKTOK PİKSEL] 🎵 PlaceAnOrder (Teşekkürler Sayfası) ateşlendi! ID:', 'background: #000000; color: #00F2FE; padding: 4px;', orderData.eventId + '_pao');
+                        
+                        // Sayfayı yenilediğinde tekrar göndermemesi için işaretle
+                        orderData.paoFired = true;
+                        sessionStorage.setItem('lastOrder', JSON.stringify(orderData));
+                    }
                 } catch (e) { console.error("Pixel Error:", e); }
             }
         });

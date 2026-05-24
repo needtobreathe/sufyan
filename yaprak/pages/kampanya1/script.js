@@ -211,7 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
                         ttq.track('Purchase', ttPayload, { event_id: eventId });
                         ttq.track('CompletePayment', ttPayload, { event_id: eventId + '_cp' });
-                        ttq.track('PlaceAnOrder', ttPayload, { event_id: eventId + '_pao' });
                         console.log('%c[TİKTOK PİKSEL] 🎵 Purchase + CompletePayment eventleri ateşlendi! ID:', 'background: #000000; color: #00F2FE; padding: 4px;', eventId);
                     }
 

@@ -19,7 +19,7 @@ mongoose.connect(uri, { dbName: 'sufyan-yaprak' }).then(async () => {
   n=document.createElement("script");n.type="text/javascript";n.async=!0;n.src=r+"?sdkid="+e+"&lib="+t;
   e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
 
-  ttq.load('D3G2DL3C77U8DNMA0FF0');
+  ttq.load('D87O7NJC77U6OC337MDG');
   ttq.page();
 }(window, document, 'ttq');
 </script>

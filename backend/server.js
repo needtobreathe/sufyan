@@ -2240,7 +2240,8 @@ app.post('/api/orders', async (req, res) => {
         const siteId = req.body.siteId || 'default';
         if (siteId !== 'default') {
             const activePage = await LeafPage.findOne({ slug: siteId.toLowerCase() });
-            if (!activePage) {
+            const activeSite = await Site.findOne({ subdomain: siteId.toLowerCase() });
+            if (!activePage && !activeSite) {
                 console.warn(`[Blocked Unauthorized Order] Bilinmeyen/Yabancı ürün slug'ı ile sipariş engellendi: ${siteId}`);
                 return res.status(400).json({ success: false, message: 'Geçersiz ürün veya sayfa kimliği.' });
             }
