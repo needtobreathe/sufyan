@@ -523,12 +523,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).catch(() => {});
             }
 
-            // 2. External Pixels (Facebook & TikTok)
             try {
                 if (typeof ttq !== 'undefined') {
-                    if (eventName === 'page_view') {
-                        ttq.track('PageView');
-                    }
+                    // ttq.page() is already called in the global pixel script
                 }
             } catch (e) {}
         },
