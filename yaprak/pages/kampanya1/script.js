@@ -210,8 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             "currency": "TRY"
                         };
                         ttq.track('Purchase', ttPayload, { event_id: eventId });
-                        ttq.track('CompletePayment', ttPayload, { event_id: eventId + '_cp' });
-                        console.log('%c[TİKTOK PİKSEL] 🎵 Purchase + CompletePayment eventleri ateşlendi! ID:', 'background: #000000; color: #00F2FE; padding: 4px;', eventId);
+                        console.log('%c[TİKTOK PİKSEL] 🎵 Purchase eventi ateşlendi! ID:', 'background: #000000; color: #00F2FE; padding: 4px;', eventId);
                     }
 
                     // Merging API result (contains productPhone) with submitted order data

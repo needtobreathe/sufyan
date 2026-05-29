@@ -2311,7 +2311,6 @@ app.post('/api/orders', async (req, res) => {
         // --- TikTok Events API (Server Side) ---
         if (tiktokPixelId && tiktokAccessToken) {
             sendTikTokServerEvent('Purchase', req, newOrder, tiktokPixelId, tiktokAccessToken);
-            sendTikTokServerEvent('CompletePayment', req, newOrder, tiktokPixelId, tiktokAccessToken);
         }
 
         // --- ntfy.sh Telefon Bildirimi ---
