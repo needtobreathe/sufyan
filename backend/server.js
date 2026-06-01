@@ -996,7 +996,7 @@ app.get('/api/get_shipping_orders.php', auth, async (req, res) => {
                 address: o.address,
                 revenue: o.totalPrice,
                 representative: o.processedBy || 'Sistem',
-                products: o.items.map(i => `${i.qty}x ${i.name}`).join(', '),
+                products: o.items.map(i => `${i.qty} adet ${i.name}`).join('; '),
                 last_note: ''
             };
         });

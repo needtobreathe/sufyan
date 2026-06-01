@@ -388,10 +388,15 @@ const submitOrder = async () => {
       }
     })
 
+    const cityName = cities.value.find(c => c.id === order.value.province)?.name || '';
+    const districtName = districts.value.find(d => d.id === order.value.district)?.name || '';
+
     const res = await apiFetch('/api/orders/manual', {
       method: 'POST',
       body: JSON.stringify({
         ...order.value,
+        province: cityName,
+        district: districtName,
         items: mappedItems,
         totalPrice: totalPrice.value
       })

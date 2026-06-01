@@ -482,13 +482,17 @@ const toggleQuickEdit = async (order) => {
       quickEditData.fullName = o.fullName
       quickEditData.phone = o.phone
       quickEditData.address = o.address
-      quickEditData.province = o.province || ''
-      quickEditData.district = o.district || ''
-      quickEditData.paymentMethod = o.paymentMethod || 'Kapıda Nakit'
+      const foundCity = cities.value.find(c => c.name === o.province || c.id == o.province)
+      quickEditData.province = foundCity ? foundCity.id : o.province || ''
       
       if (quickEditData.province) {
         await fetchDistrictsForQuickEdit()
+        const foundDist = qeDistricts.value.find(d => d.name === o.district || d.id == o.district)
+        quickEditData.district = foundDist ? foundDist.id : o.district || ''
+      } else {
+        quickEditData.district = o.district || ''
       }
+      quickEditData.paymentMethod = o.paymentMethod || 'Kapıda Nakit'
     }
   } catch (err) {
     console.error('Sipariş detayları alınamadı:', err)
@@ -516,6 +520,9 @@ const fetchDistrictsForQuickEdit = async () => {
 const saveQuickEdit = async () => {
   isSavingQE.value = true
   try {
+    const cityName = cities.value.find(c => c.id == quickEditData.province)?.name || quickEditData.province
+    const districtName = qeDistricts.value.find(d => d.id == quickEditData.district)?.name || quickEditData.district
+
     const response = await apiFetch(`/api/orders/${quickEditData.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -523,8 +530,8 @@ const saveQuickEdit = async () => {
         fullName: quickEditData.fullName,
         phone: quickEditData.phone,
         address: quickEditData.address,
-        province: quickEditData.province,
-        district: quickEditData.district,
+        province: cityName,
+        district: districtName,
         paymentMethod: quickEditData.paymentMethod
       })
     })
@@ -1258,7 +1265,7 @@ const exportToExcel = async () => {
       "İl": o.province || '-',
       "İlçe": o.district || '-',
       "Adres": o.address || '-',
-      "Ürün": (o.items || []).map(i => `${i.qty} adet ${i.name}`).join(', '),
+      "Ürün": (o.items || []).map(i => `${i.qty} adet ${i.name}`).join('; '),
       "Fiyat": o.totalPrice || '0',
       "Ödeme yöntemi": o.paymentMethod || '-',
       "Durum": o.status || '-',

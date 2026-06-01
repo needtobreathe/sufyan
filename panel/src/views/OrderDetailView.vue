@@ -197,14 +197,21 @@
                     <th>Ürün</th>
                     <th width="60">Adet</th>
                     <th width="100">Tutar</th>
+                    <th width="40"></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(item, i) in order.items" :key="i">
                     <td data-label="Ürün">
-                      <div class="product-cell-content">
-                        <strong>{{ resolveProductName(order, item) }}</strong>
-                      </div>
+                      <select v-model="item.name" @change="onProductChange(item)" class="form-input select-product">
+                        <option value="" disabled>Ürün Seçiniz...</option>
+                        <option v-for="prod in allProducts" :key="prod.id" :value="prod.name">
+                          {{ prod.name }} ({{ prod.price }} TL)
+                        </option>
+                        <option v-if="item.name && !allProducts.some(p => p.name === item.name)" :value="item.name">
+                          {{ item.name }} (Eski/Özel)
+                        </option>
+                      </select>
                     </td>
                     <td data-label="Adet">
                       <input type="number" v-model.number="item.qty" class="form-input" style="width: 80px;" min="1" />
@@ -214,10 +221,19 @@
                         <input type="number" v-model.number="item.price" class="form-input" style="width: 100px;" /> TL
                       </div>
                     </td>
-
+                    <td data-label="İşlem">
+                      <button type="button" @click="removeProduct(i)" class="btn-remove-item" title="Ürünü Sil">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
+              <div class="cart-actions" style="margin-top: 12px; display: flex; justify-content: flex-end;">
+                <button type="button" @click="addProduct" class="btn-add-product">
+                  <i class="fa-solid fa-plus"></i> Ürün Ekle
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -533,12 +549,20 @@ const fetchOrderData = async () => {
 
       if (order.country) await handleCountryChange(false)
       if (order.province) {
-        await handleCityChange(false)
-        // Initialize searches
-        citySearch.value = cities.value.find(c => c.id == order.province)?.name || ''
-        if (order.district) {
-          districtSearch.value = districts.value.find(d => d.id == order.district)?.name || ''
+        const foundCity = cities.value.find(c => c.name === order.province || c.id == order.province)
+        if (foundCity) {
+          order.province = foundCity.id
         }
+        await handleCityChange(false)
+        if (order.district) {
+          const foundDist = districts.value.find(d => d.name === order.district || d.id == order.district)
+          if (foundDist) {
+            order.district = foundDist.id
+          }
+        }
+        citySearch.value = foundCity ? foundCity.name : ''
+        const foundDist = districts.value.find(d => d.id == order.district)
+        districtSearch.value = foundDist ? foundDist.name : ''
       }
       
       await fetchLogs()
@@ -791,6 +815,13 @@ const addProduct = () => {
   order.items.push({ name: '', qty: 1, price: 0 })
 }
 
+const removeProduct = (idx) => {
+  if (order.items.length <= 1) {
+    alert('Siparişte en az bir ürün bulunmalıdır.')
+    return
+  }
+  order.items.splice(idx, 1)
+}
 
 const onProductChange = (item) => {
   const selected = allProducts.value.find(p => p.name.trim().toLowerCase() === item.name.trim().toLowerCase())
@@ -801,7 +832,9 @@ const onProductChange = (item) => {
 }
 
 const openWp = () => {
-    const addressStr = order.address || '-';
+    const city = citySearch.value || '';
+    const dist = districtSearch.value || '';
+    const addressStr = [city, dist, order.address].filter(Boolean).join(' / ') || '-';
 
     const productsText = order.items.map(item => `${item.qty} Adet ${item.name}`).join(', ');
     
@@ -980,14 +1013,17 @@ const handleSave = async (silent = false) => {
   autoSaveStatus.value = 'saving'
   
   try {
+    const cityName = cities.value.find(c => c.id == order.province)?.name || order.province;
+    const districtName = districts.value.find(d => d.id == order.district)?.name || order.district;
+
     const res = await apiFetch(`/api/orders/${orderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: order.fullName,
           phone: order.phone,
-          province: order.province,
-          district: order.district,
+          province: cityName,
+          district: districtName,
           address: order.address,
           status: order.status,
           futureDate: order.futureDate,
@@ -1300,6 +1336,52 @@ const formatDate = (dateStr) => {
   padding: 16px 20px;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+}
+
+.select-product {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.btn-remove-item {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-remove-item:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.btn-add-product {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-product:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .total-cell-mini {
