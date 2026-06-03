@@ -93,7 +93,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     optionsSuccessStatus: 200
 }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        req.rawBody = buf;
+    }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.text({ type: 'text/plain', limit: '10mb' }));
 
@@ -1973,7 +1978,8 @@ app.get('/api/orders', auth, async (req, res) => {
         const allActiveSlugs = [
             ...activeLeafPages.map(p => p.slug?.toLowerCase()),
             ...activeSites.map(s => s.subdomain?.toLowerCase()),
-            'manual'
+            'manual',
+            'shopify'
         ].filter(Boolean);
         
         query.site_id = { $in: allActiveSlugs };
@@ -2226,6 +2232,99 @@ async function sendSingleNtfy(topic, order, clickUrl) {
         console.error(`[ntfy] ${topic} gonderim hatası:`, errorMsg);
     }
 }
+
+// Shopify Webhook Endpoint (Sipariş Oluşturulduğunda Tetiklenir)
+app.post('/api/webhooks/shopify/orders', async (req, res) => {
+    try {
+        const hmacHeader = req.headers['x-shopify-hmac-sha256'];
+        const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
+
+        // Eger gizli anahtar tanımlanmışsa HMAC doğrulamasını yap
+        if (secret && hmacHeader) {
+            const rawBody = req.rawBody || Buffer.from(JSON.stringify(req.body));
+            const generatedHmac = crypto
+                .createHmac('sha256', secret)
+                .update(rawBody)
+                .digest('base64');
+
+            if (generatedHmac !== hmacHeader) {
+                console.warn('❌ [Shopify Webhook] Geçersiz HMAC imzası!');
+                return res.status(401).json({ success: false, message: 'Unauthorized' });
+            }
+        } else {
+            console.log('⚠️ [Shopify Webhook] Gizli anahtar (SHOPIFY_WEBHOOK_SECRET) bulunamadı veya imza eksik. Doğrulama atlandı.');
+        }
+
+        const shopifyOrder = req.body;
+        console.log(`📥 [Shopify Webhook] Yeni sipariş alındı: ${shopifyOrder.name || shopifyOrder.id}`);
+
+        // Telefon Numarası Temizleme & Formatlama
+        let phone = shopifyOrder.shipping_address?.phone || shopifyOrder.phone || shopifyOrder.customer?.phone || '';
+        phone = phone.replace(/[^0-9]/g, '');
+        if (phone.startsWith('905')) {
+            phone = '0' + phone.substring(2);
+        } else if (phone.startsWith('5')) {
+            phone = '0' + phone;
+        }
+
+        // Ad Soyad Birleştirme
+        const first = shopifyOrder.shipping_address?.first_name || '';
+        const last = shopifyOrder.shipping_address?.last_name || '';
+        const fullName = `${first} ${last}`.trim() || shopifyOrder.customer?.first_name || 'İsimsiz Müşteri';
+
+        // İl & İlçe Eşleme
+        const province = shopifyOrder.shipping_address?.province || 'Belirtilmedi';
+        const district = shopifyOrder.shipping_address?.city || 'Belirtilmedi';
+
+        // Açık Adres
+        const addr1 = shopifyOrder.shipping_address?.address1 || '';
+        const addr2 = shopifyOrder.shipping_address?.address2 || '';
+        const address = `${addr1} ${addr2}`.trim() || 'Adres belirtilmedi';
+
+        // Ödeme Yöntemi Eşleme
+        let paymentMethod = 'Kapıda Nakit'; // Varsayılan
+        const gateways = shopifyOrder.payment_gateway_names || [];
+        if (gateways.some(g => g.toLowerCase().includes('cash') || g.toLowerCase().includes('cod'))) {
+            paymentMethod = 'Kapıda Nakit';
+        } else if (gateways.length > 0) {
+            paymentMethod = 'Online Kredi Kartı';
+        }
+
+        // Ürünler
+        const items = (shopifyOrder.line_items || []).map(item => ({
+            name: item.title + (item.variant_title ? ` (${item.variant_title})` : ''),
+            qty: Number(item.quantity || 1),
+            price: Number(item.price || 0)
+        }));
+
+        const orderData = {
+            fullName,
+            phone,
+            province,
+            district,
+            address,
+            paymentMethod,
+            siteId: 'shopify',
+            site_id: 'shopify',
+            items,
+            totalPrice: Number(shopifyOrder.current_total_price || shopifyOrder.total_price || 0),
+            status: 'pending',
+            device_id: 'shopify_webhook'
+        };
+
+        // Siparişi iç fonksiyondan kaydet
+        const clientIp = shopifyOrder.browser_ip || req.ip;
+        const newOrder = await createOrderInternal(orderData, clientIp);
+
+        // ntfy ve benzeri bildirim sistemlerini tetikle
+        await sendNtfyNotification(newOrder);
+
+        res.status(200).json({ success: true, message: 'Order processed successfully' });
+    } catch (error) {
+        console.error('❌ [Shopify Webhook Error]:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
 
 // Create Order (Renderer/App)
 app.post('/api/orders', async (req, res) => {
