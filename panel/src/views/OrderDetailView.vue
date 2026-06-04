@@ -191,6 +191,41 @@
             </div>
 
             <div class="cart-table-wrapper">
+              <!-- Kampanya / Hazır Paket Seçimi -->
+              <div class="package-selector-section" style="margin-bottom: 16px; padding: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label style="font-weight: 600; font-size: 13px; color: #475569; display: block; margin-bottom: 6px;">Kampanya Seçimi (Hazır Paketler)</label>
+                  <select v-model="selectedCampaignSlug" @change="onCampaignChange" class="form-input" style="background: #ffffff; border-radius: 6px; border: 1px solid #cbd5e1; height: 38px;">
+                    <option value="">Kampanya Seçiniz...</option>
+                    <option v-for="page in leafPages" :key="page._id" :value="page.slug">
+                      {{ page.name }} ({{ page.slug }})
+                    </option>
+                  </select>
+                </div>
+
+                <div v-if="packages && packages.length > 0" style="margin-top: 10px;">
+                  <label style="font-weight: 600; font-size: 12px; color: #64748b; display: block; margin-bottom: 6px;">Hazır Paketler</label>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button 
+                      v-for="(pkg, idx) in packages" 
+                      :key="idx"
+                      type="button"
+                      @click="selectReadyPackage(pkg)"
+                      style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                      onmouseover="this.style.borderColor='#94a3b8'; this.style.background='#f8fafc';"
+                      onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#ffffff';"
+                    >
+                      <i class="fa-solid fa-box-open" style="color: #64748b;"></i>
+                      <span>{{ pkg.name }}</span>
+                      <span style="font-weight: 700; color: #10b981;">{{ pkg.price }} TL</span>
+                    </button>
+                  </div>
+                </div>
+                <div v-else-if="selectedCampaignSlug" style="margin-top: 8px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                  Bu kampanyaya ait hazır paket bulunmamaktadır.
+                </div>
+              </div>
+
               <table class="cart-table">
                 <thead>
                   <tr>
@@ -234,6 +269,7 @@
                   <i class="fa-solid fa-plus"></i> Ürün Ekle
                 </button>
               </div>
+
             </div>
           </div>
         </div>
@@ -264,6 +300,33 @@
           <div class="form-group">
             <label>Sipariş Kaynağı (Site)</label>
             <input type="text" :value="getSiteName(order.site_id)" class="form-input" readonly />
+          </div>
+
+          <div class="form-group" v-if="order.ip_address">
+            <label>İstemci IP Adresi</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="text" :value="order.ip_address" class="form-input" readonly style="flex: 1;" />
+              <button 
+                v-if="!isIpBanned" 
+                type="button" 
+                @click="toggleIpBan" 
+                style="background: #ef4444; color: #fff; border: none; border-radius: 6px; padding: 0 16px; height: 38px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                onmouseover="this.style.background='#dc2626';"
+                onmouseout="this.style.background='#ef4444';"
+              >
+                <i class="fa-solid fa-ban"></i> IP Engelle
+              </button>
+              <button 
+                v-else 
+                type="button" 
+                @click="toggleIpBan" 
+                style="background: #10b981; color: #fff; border: none; border-radius: 6px; padding: 0 16px; height: 38px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
+                onmouseover="this.style.background='#059669';"
+                onmouseout="this.style.background='#10b981';"
+              >
+                <i class="fa-solid fa-unlock"></i> Engeli Kaldır
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -452,12 +515,17 @@ const order = reactive({
   trackingUrl: '',
   futureDate: '',
   shippingFee: 0,
+  totalPrice: 0,
   site_id: '',
+  ip_address: '',
   items: [],
   logs: []
 })
 
 const loading = ref(false)
+const isIpBanned = ref(false)
+const packages = ref([])
+const selectedCampaignSlug = ref('')
 const sites = ref([])
 const allProducts = ref([])
 const cities = ref([])
@@ -507,6 +575,7 @@ onMounted(async () => {
     fetchCities(),
     fetchLogs()
   ])
+  onCampaignChange()
 })
 
 const fetchOrderData = async () => {
@@ -523,6 +592,9 @@ const fetchOrderData = async () => {
     
     if (data.success && data.order) {
       Object.assign(order, data.order)
+      isIpBanned.value = data.isIpBanned || false
+      packages.value = data.packages || []
+      selectedCampaignSlug.value = order.site_id || ''
       
       // Map items array if present, otherwise fallback to root fields (for legacy compatibility)
       if (data.order.items && data.order.items.length > 0) {
@@ -788,6 +860,7 @@ const fetchSites = async () => {
 
 const getSiteName = (site_id) => {
   if (!site_id) return '-'
+  if (site_id === 'shopify') return 'Shopify'
   const site = sites.value.find(s => s.subdomain === site_id.toLowerCase())
   return site ? site.name : site_id
 }
@@ -828,6 +901,49 @@ const onProductChange = (item) => {
   if (selected) {
     item.price = selected.price || 0
     item.qty = 1
+  }
+}
+
+const selectReadyPackage = (pkg) => {
+  if (order.items.length === 0) {
+    order.items.push({ name: '', qty: 1, price: 0 })
+  }
+  order.items[0].qty = Number(pkg.quantity || 1)
+  order.items[0].price = Number(pkg.price || 0)
+}
+
+const onCampaignChange = () => {
+  const page = leafPages.value.find(p => p.slug === selectedCampaignSlug.value)
+  if (page && page.products && page.products.length > 0) {
+    packages.value = page.products
+  } else {
+    packages.value = []
+  }
+}
+
+const toggleIpBan = async () => {
+  if (!order.ip_address) return
+  const action = isIpBanned.value ? 'unblock-ip' : 'block-ip'
+  const actionText = isIpBanned.value ? 'Engeli kaldırmak' : 'IP adresini engellemek'
+  
+  if (!confirm(`Bu istemcinin (${order.ip_address}) ${actionText} istediğinize emin misiniz?`)) return
+  
+  try {
+    loading.value = true
+    const res = await apiFetch(`/api/orders/${orderId}/${action}`, { method: 'POST' })
+    const data = await res.json()
+    if (data.success) {
+      isIpBanned.value = !isIpBanned.value
+      alert(data.message || 'İşlem başarılı.')
+      await fetchLogs()
+    } else {
+      alert(data.message || 'İşlem sırasında bir hata oluştu.')
+    }
+  } catch (err) {
+    console.error('IP Ban/Unban error:', err)
+    alert('Bağlantı hatası.')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -1029,7 +1145,7 @@ const handleSave = async (silent = false) => {
           futureDate: order.futureDate,
           items: order.items,
           quantity: order.items.reduce((sum, item) => sum + (item.qty || 0), 0),
-          totalPrice: totalAmount.value
+          totalPrice: order.items.reduce((sum, item) => sum + (Number(item.price) || 0), 0)
         })
       })
       const data = await res.json()

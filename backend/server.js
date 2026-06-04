@@ -39,6 +39,7 @@ const Site = require('./models/Site');
 const LeafPage = require('./models/LeafPage');
 const GlobalSetting = require('./models/GlobalSetting');
 const OrderLock = require('./models/OrderLock');
+const BannedIp = require('./models/BannedIp');
 
 // --- New Native Models ---
 const Country = require('./models/Country');
@@ -2309,7 +2310,7 @@ app.post('/api/webhooks/shopify/orders', async (req, res) => {
             items,
             totalPrice: Number(shopifyOrder.current_total_price || shopifyOrder.total_price || 0),
             status: 'pending',
-            device_id: 'shopify_webhook'
+            device_id: shopifyOrder.name ? `shopify_${shopifyOrder.name}` : `shopify_${shopifyOrder.id}`
         };
 
         // Siparişi iç fonksiyondan kaydet
@@ -2448,10 +2449,23 @@ app.post('/api/orders/manual', auth, async (req, res) => {
 app.get('/api/orders/:id', auth, async (req, res) => {
     try {
         let order = await Order.findById(req.params.id);
-        
         if (!order) return res.status(404).json({ success: false, message: 'Sipariş bulunamadı' });
         
-        res.json({ success: true, order });
+        let isIpBanned = false;
+        if (order.ip_address) {
+            const banned = await BannedIp.findOne({ ip: order.ip_address });
+            if (banned) isIpBanned = true;
+        }
+
+        let packages = [];
+        if (order.site_id) {
+            const page = await LeafPage.findOne({ slug: order.site_id.toLowerCase() });
+            if (page && page.products && page.products.length > 0) {
+                packages = page.products;
+            }
+        }
+        
+        res.json({ success: true, order, isIpBanned, packages });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -2507,6 +2521,57 @@ app.get('/api/orders/:id/logs', auth, async (req, res) => {
         res.json({ success: true, logs });
     } catch (error) {
         res.status(500).json({ success: false });
+    }
+});
+
+app.post('/api/orders/:id/block-ip', auth, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ success: false, message: 'Sipariş bulunamadı' });
+        if (!order.ip_address || order.ip_address === 'shopify_import') {
+            return res.status(400).json({ success: false, message: 'Bu siparişin geçerli bir IP adresi yok' });
+        }
+
+        const existing = await BannedIp.findOne({ ip: order.ip_address });
+        if (!existing) {
+            await BannedIp.create({
+                ip: order.ip_address,
+                reason: `Sipariş #${order._id} üzerinden engellendi.`,
+                createdBy: req.user.fullName
+            });
+        }
+
+        await OrderLog.create({
+            orderId: order._id,
+            action: 'status_changed',
+            changedBy: req.user.fullName,
+            details: `İstemci IP adresi engellendi: ${order.ip_address}`
+        });
+
+        res.json({ success: true, message: 'IP adresi başarıyla engellendi.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.post('/api/orders/:id/unblock-ip', auth, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ success: false, message: 'Sipariş bulunamadı' });
+        if (!order.ip_address) return res.status(400).json({ success: false, message: 'IP adresi bulunamadı' });
+
+        await BannedIp.deleteOne({ ip: order.ip_address });
+
+        await OrderLog.create({
+            orderId: order._id,
+            action: 'status_changed',
+            changedBy: req.user.fullName,
+            details: `İstemci IP adresi engeli kaldırıldı: ${order.ip_address}`
+        });
+
+        res.json({ success: true, message: 'IP adresi engeli başarıyla kaldırıldı.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

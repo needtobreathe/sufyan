@@ -164,7 +164,9 @@
               <td>
                 <div class="site-col">
                   <div class="site-referer" v-if="order.referer">{{ order.referer }}</div>
-                  <div class="site-subdomain">{{ order.site_id }}</div>
+                  <div class="site-subdomain" :class="{ 'shopify-badge': order.site_id === 'shopify' }">
+                    {{ order.site_id === 'shopify' ? 'Shopify' : order.site_id }}
+                  </div>
                 </div>
               </td>
               <td>
@@ -1751,6 +1753,16 @@ const deleteOrder = async (order) => {
 .site-subdomain {
   font-size: 11px;
   color: #94a3b8;
+}
+
+.shopify-badge {
+  background: #2c9a58;
+  color: #ffffff;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-block;
 }
 
 .product-list-compact {
