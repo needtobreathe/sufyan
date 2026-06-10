@@ -421,6 +421,9 @@ app.get('/api/products', auth, async (req, res) => {
             stock: p.stock,
             urun_paketler: p.urun_paketler,
             active: p.active,
+            shopifyProductId: p.shopifyProductId || null,
+            shopifyVariantId: p.shopifyVariantId || null,
+            shopifyTitle: p.shopifyTitle || null,
             type: 'product'
         }));
 
@@ -437,6 +440,9 @@ app.get('/api/products', auth, async (req, res) => {
                     code: 'LEAF',
                     stock: 999,
                     active: true,
+                    shopifyProductId: null,
+                    shopifyVariantId: null,
+                    shopifyTitle: null,
                     type: 'leaf_page'
                 });
                 productNames.add(displayName.toLowerCase());
@@ -458,10 +464,20 @@ app.get('/api/products', auth, async (req, res) => {
 
 app.post('/api/products/save', auth, async (req, res) => {
     try {
-        const { id, name, price, code, stock, active, packages } = req.body;
+        const { id, name, price, code, stock, active, packages, shopifyProductId, shopifyVariantId, shopifyTitle } = req.body;
         const urun_paketler = JSON.stringify(packages || []);
         
-        const updateData = { name, price, code, stock, active, urun_paketler };
+        const updateData = { 
+            name, 
+            price, 
+            code, 
+            stock, 
+            active, 
+            urun_paketler,
+            shopifyProductId: shopifyProductId !== undefined ? shopifyProductId : undefined,
+            shopifyVariantId: shopifyVariantId !== undefined ? shopifyVariantId : undefined,
+            shopifyTitle: shopifyTitle !== undefined ? shopifyTitle : undefined
+        };
         
         if (id) {
             await Product.findByIdAndUpdate(id, updateData);
@@ -2324,6 +2340,168 @@ app.post('/api/webhooks/shopify/orders', async (req, res) => {
     } catch (error) {
         console.error('❌ [Shopify Webhook Error]:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+// Shopify Product Sync Endpoints
+app.get('/api/shopify/products', auth, async (req, res) => {
+    try {
+        const shop = process.env.SHOPIFY_SHOP_NAME;
+        const token = process.env.SHOPIFY_ACCESS_TOKEN;
+
+        if (!shop || !token) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Shopify bağlantı ayarları eksik. .env dosyasını kontrol edin.' 
+            });
+        }
+
+        const url = `https://${shop}/admin/api/2024-04/products.json?limit=250`;
+        const response = await axios.get(url, {
+            headers: {
+                'X-Shopify-Access-Token': token,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const shopifyProducts = response.data.products || [];
+        
+        // Map Shopify products to a clean format containing variants
+        const mapped = shopifyProducts.map(p => ({
+            id: p.id.toString(),
+            title: p.title,
+            image: p.image?.src || (p.images && p.images[0]?.src) || null,
+            variants: (p.variants || []).map(v => ({
+                id: v.id.toString(),
+                title: v.title,
+                price: v.price,
+                sku: v.sku
+            }))
+        }));
+
+        res.json({ success: true, products: mapped });
+    } catch (error) {
+        console.error('❌ Shopify Fetch Products Error:', error.response?.data || error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Shopify ürünleri yüklenemedi: ' + (error.response?.data ? JSON.stringify(error.response.data) : error.message) 
+        });
+    }
+});
+
+app.post('/api/shopify/map-product', auth, async (req, res) => {
+    try {
+        const { productId, shopifyProductId, shopifyVariantId, shopifyTitle } = req.body;
+        if (!productId) return res.status(400).json({ success: false, message: 'Yerel ürün ID zorunlu' });
+
+        await Product.findByIdAndUpdate(productId, {
+            shopifyProductId: shopifyProductId || null,
+            shopifyVariantId: shopifyVariantId || null,
+            shopifyTitle: shopifyTitle || null
+        });
+
+        res.json({ success: true, message: 'Ürün başarıyla eşlendi.' });
+    } catch (error) {
+        console.error('❌ Shopify Product Map Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Shopify Push Packages as Variants
+app.post('/api/shopify/push-packages', auth, async (req, res) => {
+    try {
+        const { leafPageId } = req.body;
+        if (!leafPageId) return res.status(400).json({ success: false, message: 'Yaprak Sayfa ID zorunlu.' });
+
+        const leafPage = await LeafPage.findById(leafPageId);
+        if (!leafPage) return res.status(404).json({ success: false, message: 'Yaprak sayfa bulunamadı.' });
+
+        if (!leafPage.products || leafPage.products.length === 0) {
+            return res.status(400).json({ success: false, message: 'Bu yaprak sayfada tanımlı paket bulunmuyor.' });
+        }
+
+        // Bulunan yaprak sayfanın ürün adı ile standart ürünü eşleştir
+        const product = await Product.findOne({ name: new RegExp('^' + leafPage.productName + '$', 'i') });
+        if (!product || !product.shopifyProductId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `"${leafPage.productName}" adıyla eşleşen ve Shopify entegrasyonu tamamlanmış bir standart ürün bulunamadı. Lütfen önce Ürün Eşleme sayfasından bu ürünü eşleştirin.` 
+            });
+        }
+
+        const shop = process.env.SHOPIFY_SHOP_NAME;
+        const token = process.env.SHOPIFY_ACCESS_TOKEN;
+
+        if (!shop || !token) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Shopify bağlantı ayarları eksik. .env dosyasını kontrol edin.' 
+            });
+        }
+
+        const shopifyProductId = product.shopifyProductId;
+        const url = `https://${shop}/admin/api/2024-04/products/${shopifyProductId}.json`;
+
+        // Shopify'a gönderilecek varyantları ve seçenekleri hazırla
+        const values = leafPage.products.map(p => p.name);
+        const variants = leafPage.products.map(p => {
+            const cleanSku = `${product.code || 'PRD'}-${p.quantity}x`.toUpperCase();
+            return {
+                option1: p.name,
+                price: p.price.toString(),
+                sku: cleanSku,
+                fulfillment_service: "manual",
+                inventory_management: null, // Stok takibini kapatarak "Satıldı / Stokta Yok" görünmesini engelliyoruz
+                inventory_policy: "continue" // Her ihtimale karşı satışı durdurma
+            };
+        });
+
+        console.log(`📤 [Shopify Push Packages] Product: ${shopifyProductId}, Variants Count: ${variants.length}`);
+
+        const response = await axios.put(url, {
+            product: {
+                id: parseInt(shopifyProductId),
+                options: [
+                    {
+                        name: "Paket",
+                        values: values
+                    }
+                ],
+                variants: variants
+            }
+        }, {
+            headers: {
+                'X-Shopify-Access-Token': token,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const updatedShopifyProduct = response.data.product;
+        const shopifyVariants = updatedShopifyProduct.variants || [];
+
+        // Yerel veritabanındaki paketlere Shopify'dan dönen variantId'leri kaydet
+        leafPage.products.forEach(pkg => {
+            const match = shopifyVariants.find(sv => sv.option1.toLowerCase() === pkg.name.toLowerCase());
+            if (match) {
+                pkg.shopifyProductId = shopifyProductId;
+                pkg.shopifyVariantId = match.id.toString();
+            }
+        });
+
+        await leafPage.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Paketler Shopify\'a varyant olarak başarıyla aktarıldı ve eşlendi.',
+            variants: shopifyVariants.map(v => ({ id: v.id, title: v.title, price: v.price }))
+        });
+
+    } catch (error) {
+        console.error('❌ Shopify Push Packages Error:', error.response?.data || error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Paketler aktarılamadı: ' + (error.response?.data ? JSON.stringify(error.response.data) : error.message) 
+        });
     }
 });
 

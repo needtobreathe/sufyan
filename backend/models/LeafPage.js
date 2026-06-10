@@ -52,7 +52,9 @@ const LeafPageSchema = new mongoose.Schema({
         price: { type: Number, default: 0 },
         image: { type: String }, // NEW: Image for the package
         isDefault: { type: Boolean, default: false },
-        productId: { type: Number, default: null } // Legacy product_id reference
+        productId: { type: Number, default: null }, // Legacy product_id reference
+        shopifyProductId: { type: String, default: null },
+        shopifyVariantId: { type: String, default: null }
     }],
     siteId: { type: String, default: null },
     phone: { type: String, default: '' },

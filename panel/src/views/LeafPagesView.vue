@@ -3,6 +3,17 @@
     <div class="page-header">
       <h2>Yaprak Sayfa Listesi</h2>
         <div class="header-actions">
+          <button class="sync-btn shopify-all-btn" @click="handlePushAllPackagesToShopify" :disabled="pushingAll || syncing">
+            <svg v-if="pushingAll" class="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            {{ pushingAll ? 'Paketler Aktarılıyor...' : 'Paketleri Shopify\'a Gönder' }}
+          </button>
           <button class="sync-btn" @click="handleSyncAll" :disabled="syncing">
             <svg v-if="syncing" class="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
@@ -67,6 +78,20 @@
             </td>
             <td>
               <div class="actions">
+                <button 
+                  v-if="hasShopifyProduct(page)" 
+                  class="action-btn action-shopify" 
+                  @click="pushPackagesToShopify(page)"
+                  :disabled="pushing === page._id"
+                  title="Paketleri Shopify Varyantı Olarak Gönder"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                  </svg>
+                  {{ pushing === page._id ? 'Aktarılıyor...' : 'Shopify\'a Gönder' }}
+                </button>
                 <button class="action-btn action-clone" @click="clonePage(page._id)" :disabled="cloning === page._id">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -220,6 +245,77 @@ const clonePage = async (id) => {
     alert('İşlem başarısız oldu')
   } finally {
     cloning.value = null
+  }
+}
+const pushing = ref(null)
+const pushingAll = ref(false)
+
+const hasShopifyProduct = (page) => {
+  const prodName = getProductName(page)
+  const product = products.value.find(p => p.name.toLowerCase() === prodName.toLowerCase())
+  return product && product.shopifyProductId
+}
+
+const handlePushAllPackagesToShopify = async () => {
+  const eligiblePages = leafPages.value.filter(page => hasShopifyProduct(page))
+  if (eligiblePages.length === 0) {
+    alert('Shopify ile eşlenmiş ürünü olan herhangi bir yaprak sayfa bulunamadı.')
+    return
+  }
+
+  if (!confirm(`Toplam ${eligiblePages.length} sayfanın paketlerini Shopify'a göndermek istediğinizden emin misiniz?`)) return
+
+  pushingAll.value = true
+  let successCount = 0
+  let failCount = 0
+
+  for (const page of eligiblePages) {
+    try {
+      const response = await apiFetch('/api/shopify/push-packages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leafPageId: page._id })
+      })
+      const data = await response.json()
+      if (data.success) {
+        successCount++
+      } else {
+        failCount++
+        console.error(`Page ${page.name} failed:`, data.message)
+      }
+    } catch (err) {
+      failCount++
+      console.error(`Page ${page.name} error:`, err)
+    }
+  }
+
+  pushingAll.value = false
+  alert(`Shopify Paket Aktarımı Tamamlandı!\nBaşarılı: ${successCount}\nHatalı/Başarısız: ${failCount}`)
+}
+
+
+const pushPackagesToShopify = async (page) => {
+  if (!confirm(`"${page.productName}" paketlerini Shopify'a varyant olarak göndermek istediğinizden emin misiniz? Bu işlem Shopify'daki mevcut varyantları güncelleyecektir.`)) return
+
+  pushing.value = page._id
+  try {
+    const response = await apiFetch('/api/shopify/push-packages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ leafPageId: page._id })
+    })
+
+    const data = await response.json()
+    if (data.success) {
+      alert(data.message)
+    } else {
+      alert(data.message || 'Gönderme işlemi başarısız oldu.')
+    }
+  } catch (error) {
+    console.error('Push packages error:', error)
+    alert('Hata oluştu.')
+  } finally {
+    pushing.value = null
   }
 }
 
@@ -522,5 +618,26 @@ onUnmounted(() => {
   font-size: 13px;
   font-weight: 600;
   color: #666;
+}
+.action-shopify {
+  color: #166534;
+  border-color: #bbf7d0;
+}
+.action-shopify:hover:not(:disabled) {
+  background: #f0fdf4;
+  border-color: #166534;
+}
+.action-shopify:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.shopify-all-btn {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border-color: #bbf7d0 !important;
+}
+.shopify-all-btn:hover:not(:disabled) {
+  background: #dcfce7 !important;
+  border-color: #166534 !important;
 }
 </style>

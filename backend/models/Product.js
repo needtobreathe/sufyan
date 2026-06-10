@@ -7,7 +7,10 @@ const productSchema = new mongoose.Schema({
     code: { type: String, default: '' },
     stock: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
-    urun_paketler: { type: String, default: '[]' } // Stored as JSON string
+    urun_paketler: { type: String, default: '[]' }, // Stored as JSON string
+    shopifyProductId: { type: String, default: null },
+    shopifyVariantId: { type: String, default: null },
+    shopifyTitle: { type: String, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

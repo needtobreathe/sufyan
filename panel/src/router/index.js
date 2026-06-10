@@ -5,6 +5,7 @@ import OrdersView from "../views/OrdersView.vue";
 import OrderDetailView from "../views/OrderDetailView.vue";
 import ProductsView from "../views/ProductsView.vue";
 import ProductAddView from "../views/ProductAddView.vue";
+import ShopifySyncView from "../views/ShopifySyncView.vue";
 import UserAddView from "../views/UserAddView.vue";
 import UsersView from "../views/UsersView.vue";
 import SitesView from "../views/SitesView.vue";
@@ -65,6 +66,12 @@ const routes = [
     path: "/products/:id/edit",
     name: "ProductEdit",
     component: ProductAddView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/shopify-sync",
+    name: "ShopifySync",
+    component: ShopifySyncView,
     meta: { requiresAuth: true },
   },
   {

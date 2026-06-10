@@ -213,6 +213,32 @@
         </div>
 
         <template v-if="isAdmin">
+          <!-- Ürün Yönetimi -->
+          <div class="nav-group">
+            <button class="nav-group-toggle" @click="toggleGroup('urunler')">
+              <span>Ürün Yönetimi</span>
+              <svg :class="{ rotated: openGroups.urunler }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="nav-group-items" v-show="openGroups.urunler">
+              <router-link to="/products" class="nav-item" :class="{ active: $route.path === '/products' }">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                </svg>
+                <span>Yerel Ürünler</span>
+              </router-link>
+              <router-link to="/shopify-sync" class="nav-item" :class="{ active: $route.path === '/shopify-sync' }">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                </svg>
+                <span>Shopify Eşleme</span>
+              </router-link>
+            </div>
+          </div>
+
           <!-- Kullanıcılar -->
           <div class="nav-group">
             <button class="nav-group-toggle" @click="toggleGroup('kullanicilar')">
@@ -356,7 +382,7 @@ const router = useRouter()
 const route = useRoute()
 
 const savedGroups = localStorage.getItem('sidebar_groups')
-const defaultGroups = { genel: true, siparisler: true, urunSiparisleri: true, kullanicilar: true, siteler: true, yaprakSayfalar: true, ayarlar: true }
+const defaultGroups = { genel: true, siparisler: true, urunler: true, urunSiparisleri: true, kullanicilar: true, siteler: true, yaprakSayfalar: true, ayarlar: true }
 
 const openGroups = reactive(
   savedGroups ? { ...defaultGroups, ...JSON.parse(savedGroups) } : { ...defaultGroups }
