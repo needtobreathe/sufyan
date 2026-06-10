@@ -2308,11 +2308,60 @@ app.post('/api/webhooks/shopify/orders', async (req, res) => {
         }
 
         // Ürünler
-        const items = (shopifyOrder.line_items || []).map(item => ({
-            name: item.title + (item.variant_title ? ` (${item.variant_title})` : ''),
-            qty: Number(item.quantity || 1),
-            price: Number(item.price || 0)
-        }));
+        const items = [];
+        for (const item of (shopifyOrder.line_items || [])) {
+            let itemName = item.title;
+            let itemQty = Number(item.quantity || 1);
+            let itemPrice = Number(item.price || 0);
+
+            let resolved = false;
+
+            // 1. Variant ID ile eşleşen hazır paketi bulmaya çalış
+            if (item.variant_id) {
+                const leafPage = await LeafPage.findOne({ 
+                    "products.shopifyVariantId": item.variant_id.toString() 
+                });
+                if (leafPage) {
+                    const pkg = leafPage.products.find(p => p.shopifyVariantId === item.variant_id.toString());
+                    if (pkg) {
+                        itemName = leafPage.productName || item.title;
+                        itemQty = Number(item.quantity || 1) * (pkg.quantity || 1);
+                        resolved = true;
+                    }
+                }
+            }
+
+            // 2. Yedek Plan: Ürün Adı ve Varyant Adı (Paket Adı) eşleşmesi ile bulmaya çalış
+            if (!resolved && item.variant_title) {
+                const leafPage = await LeafPage.findOne({ 
+                    productName: new RegExp('^' + item.title + '$', 'i')
+                });
+                if (leafPage) {
+                    const pkg = leafPage.products.find(p => p.name.toLowerCase() === item.variant_title.toLowerCase());
+                    if (pkg) {
+                        itemName = leafPage.productName;
+                        itemQty = Number(item.quantity || 1) * (pkg.quantity || 1);
+                        resolved = true;
+                    }
+                }
+            }
+
+            // Eşleşmediyse yerel veritabanındaki standard ürün adıyla eşleştirmeyi dene veya varsayılana dön
+            if (!resolved) {
+                const stdProd = await Product.findOne({ name: new RegExp('^' + item.title + '$', 'i') });
+                if (stdProd) {
+                    itemName = stdProd.name;
+                } else {
+                    itemName = item.title + (item.variant_title ? ` (${item.variant_title})` : '');
+                }
+            }
+
+            items.push({
+                name: itemName,
+                qty: itemQty,
+                price: itemPrice
+            });
+        }
 
         const orderData = {
             fullName,
