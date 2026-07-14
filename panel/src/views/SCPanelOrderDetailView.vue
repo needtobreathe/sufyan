@@ -98,11 +98,52 @@
             <div class="form-row">
               <div class="form-group">
                 <label>İl</label>
-                <input type="text" v-model="order.province" class="form-input" />
+                <div class="search-select-wrap">
+                  <input 
+                    type="text" 
+                    v-model="citySearch" 
+                    class="form-input"
+                    placeholder="Şehir Ara..." 
+                    @focus="showCityList = true"
+                    @blur="handleCityBlur"
+                  />
+                  <div v-if="showCityList" class="search-dropdown">
+                    <div 
+                      v-for="c in filteredCities" 
+                      :key="c.id" 
+                      class="search-option"
+                      @mousedown="selectCity(c)"
+                    >
+                      {{ c.name }}
+                    </div>
+                    <div v-if="filteredCities.length === 0" class="no-results">Sonuç bulunamadı</div>
+                  </div>
+                </div>
               </div>
               <div class="form-group">
                 <label>İlçe</label>
-                <input type="text" v-model="order.district" class="form-input" />
+                <div class="search-select-wrap">
+                  <input 
+                    type="text" 
+                    v-model="districtSearch" 
+                    class="form-input"
+                    placeholder="İlçe Ara..." 
+                    :disabled="!order.province"
+                    @focus="showDistrictList = true"
+                    @blur="handleDistrictBlur"
+                  />
+                  <div v-if="showDistrictList" class="search-dropdown">
+                    <div 
+                      v-for="d in filteredDistricts" 
+                      :key="d.id" 
+                      class="search-option"
+                      @mousedown="selectDistrict(d)"
+                    >
+                      {{ d.name }}
+                    </div>
+                    <div v-if="filteredDistricts.length === 0" class="no-results">Sonuç bulunamadı</div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="form-group">
@@ -185,16 +226,117 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '../components/AdminLayout.vue'
 import { orderStore } from '../store/orderStore'
+import { apiFetch } from '@/utils/fetch'
 
 const route = useRoute()
 const router = useRouter()
 
 const order = ref(null)
 const isLoading = ref(true)
+
+const cities = ref([])
+const districts = ref([])
+const showCityList = ref(false)
+const showDistrictList = ref(false)
+const citySearch = ref('')
+const districtSearch = ref('')
+
+const fetchCities = async () => {
+  try {
+    const res = await apiFetch('/api/cities?country_id=1')
+    const data = await res.json()
+    if (data.success) {
+      cities.value = data.cities || []
+      await initializeCityAndDistrict()
+    }
+  } catch (error) {
+    console.error('Şehirler yüklenemedi:', error)
+  }
+}
+
+const fetchDistricts = async (cityId) => {
+  if (!cityId) return
+  try {
+    const res = await apiFetch(`/api/districts?city_id=${cityId}`)
+    const data = await res.json()
+    if (data.success) {
+      districts.value = data.districts || []
+    }
+  } catch (error) {
+    console.error('İlçeler yüklenemedi:', error)
+  }
+}
+
+const filteredCities = computed(() => {
+  if (!cities.value) return []
+  if (!citySearch.value) return cities.value
+  const search = citySearch.value.toLocaleLowerCase('tr')
+  return cities.value.filter(c => c && c.name && c.name.toLocaleLowerCase('tr').includes(search))
+})
+
+const filteredDistricts = computed(() => {
+  if (!districts.value) return []
+  if (!districtSearch.value) return districts.value
+  const search = districtSearch.value.toLocaleLowerCase('tr')
+  return districts.value.filter(d => d && d.name && d.name.toLocaleLowerCase('tr').includes(search))
+})
+
+const selectCity = async (c) => {
+  if (!order.value) return
+  order.value.province = c.id
+  citySearch.value = c.name
+  showCityList.value = false
+  
+  order.value.district = ''
+  districtSearch.value = ''
+  districts.value = []
+  
+  await fetchDistricts(c.id)
+}
+
+const handleCityBlur = () => {
+  setTimeout(() => { showCityList.value = false }, 200)
+}
+
+const selectDistrict = (d) => {
+  if (!order.value) return
+  order.value.district = d.id
+  districtSearch.value = d.name
+  showDistrictList.value = false
+}
+
+const handleDistrictBlur = () => {
+  setTimeout(() => { showDistrictList.value = false }, 200)
+}
+
+const initializeCityAndDistrict = async () => {
+  if (!order.value || cities.value.length === 0) return
+  
+  const foundCity = cities.value.find(c => c.name === order.value.province || c.id === order.value.province)
+  if (foundCity) {
+    order.value.province = foundCity.id
+    citySearch.value = foundCity.name
+    
+    await fetchDistricts(foundCity.id)
+    
+    if (order.value.district) {
+      const foundDist = districts.value.find(d => d.name === order.value.district || d.id === order.value.district)
+      if (foundDist) {
+        order.value.district = foundDist.id
+        districtSearch.value = foundDist.name
+      } else {
+        districtSearch.value = order.value.district
+      }
+    }
+  } else {
+    citySearch.value = order.value.province || ''
+    districtSearch.value = order.value.district || ''
+  }
+}
 
 const fetchOrderDetail = async () => {
   isLoading.value = true
@@ -205,6 +347,7 @@ const fetchOrderDetail = async () => {
       const match = data.data.find(o => o._id === route.params.id)
       if (match) {
         order.value = match
+        await initializeCityAndDistrict()
       }
     }
   } catch (error) {
@@ -245,11 +388,21 @@ const handleSave = async () => {
   // Update total price explicitly
   order.value.totalPrice = computedTotalPrice.value
 
+  // Map province ID and district ID back to their names
+  const cityName = cities.value.find(c => c.id == order.value.province)?.name || order.value.province
+  const districtName = districts.value.find(d => d.id == order.value.district)?.name || order.value.district
+
+  const payload = {
+    ...order.value,
+    province: cityName,
+    district: districtName
+  }
+
   try {
     const res = await fetch(`https://scpanel.siparisyonet.online/api/external/orders/${order.value._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(order.value)
+      body: JSON.stringify(payload)
     })
     const data = await res.json()
     if (data.success) {
@@ -346,8 +499,9 @@ const formatTime = (date) => {
   return new Date(date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
 }
 
-onMounted(() => {
-  fetchOrderDetail()
+onMounted(async () => {
+  await fetchOrderDetail()
+  await fetchCities()
 })
 </script>
 
@@ -738,6 +892,46 @@ onMounted(() => {
   font-size: 18px;
   color: #0f172a;
   font-weight: 800;
+}
+
+/* Search Select Dropdown Styles */
+.search-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-top: 4px;
+}
+
+.search-option {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.search-option:hover {
+  background: #f1f5f9;
+}
+
+.no-results {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
 }
 
 @media (max-width: 1024px) {
