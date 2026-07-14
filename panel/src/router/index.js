@@ -18,6 +18,10 @@ import LeafPageReportView from "../views/LeafPageReportView.vue";
 import CreateOrderView from "../views/CreateOrderView.vue";
 import SecurityView from "../views/SecurityView.vue";
 import SettingsView from "../views/SettingsView.vue";
+import SCPanelOrdersView from "../views/SCPanelOrdersView.vue";
+import SCPanelOrderDetailView from "../views/SCPanelOrderDetailView.vue";
+
+
 
 const routes = [
   {
@@ -36,6 +40,18 @@ const routes = [
     path: "/orders",
     name: "Orders",
     component: OrdersView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/scpanel-orders",
+    name: "SCPanelOrders",
+    component: SCPanelOrdersView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/scpanel-orders/:id",
+    name: "SCPanelOrderDetail",
+    component: SCPanelOrderDetailView,
     meta: { requiresAuth: true },
   },
   {

@@ -78,7 +78,7 @@
               <span>Tüm Siparişler</span>
               <span v-if="orderCounts.total > 0" class="badge">{{ orderCounts.total }}</span>
             </router-link>
-            <router-link to="/orders?filter=new" class="nav-item" :class="{ active: $route.query.filter === 'new' }">
+            <router-link to="/orders?filter=new" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'new' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
@@ -86,7 +86,7 @@
               <span>Yeni Siparişler</span>
               <span v-if="orderCounts.new > 0" class="badge yellow">{{ orderCounts.new }}</span>
             </router-link>
-            <router-link to="/orders?filter=to-ship" class="nav-item" :class="{ active: $route.query.filter === 'to-ship' }">
+            <router-link to="/orders?filter=to-ship" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'to-ship' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
@@ -95,7 +95,7 @@
               <span>Kargoya Verilecekler</span>
               <span v-if="orderCounts.toShip > 0" class="badge green">{{ orderCounts.toShip }}</span>
             </router-link>
-            <router-link to="/orders?filter=preparing" class="nav-item" :class="{ active: $route.query.filter === 'preparing' }">
+            <router-link to="/orders?filter=preparing" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'preparing' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 7h-9l-3 3H2v10h18V7z"/>
                 <path d="M2 10h18"/>
@@ -103,7 +103,7 @@
               <span>Hazırlanıyor</span>
               <span v-if="orderCounts.preparing > 0" class="badge blue">{{ orderCounts.preparing }}</span>
             </router-link>
-            <router-link to="/orders?filter=cancelled" class="nav-item" :class="{ active: $route.query.filter === 'cancelled' }">
+            <router-link to="/orders?filter=cancelled" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'cancelled' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="15" y1="9" x2="9" y2="15"/>
@@ -113,7 +113,7 @@
               <span v-if="orderCounts.cancelled > 0" class="badge red">{{ orderCounts.cancelled }}</span>
             </router-link>
 
-            <router-link to="/orders?filter=future" class="nav-item" :class="{ active: $route.query.filter === 'future' }">
+            <router-link to="/orders?filter=future" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'future' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
@@ -126,7 +126,7 @@
               <span v-if="orderCounts.future > 0" class="badge yellow">{{ orderCounts.future }}</span>
             </router-link>
 
-            <router-link to="/orders?filter=facebook" class="nav-item" :class="{ active: $route.query.filter === 'facebook' }">
+            <router-link to="/orders?filter=facebook" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'facebook' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
               </svg>
@@ -134,7 +134,7 @@
               <span v-if="orderCounts.facebook > 0" class="badge blue">{{ orderCounts.facebook }}</span>
             </router-link>
 
-            <router-link to="/orders?filter=instagram" class="nav-item" :class="{ active: $route.query.filter === 'instagram' }">
+            <router-link to="/orders?filter=instagram" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'instagram' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
@@ -144,7 +144,7 @@
               <span v-if="orderCounts.instagram > 0" class="badge" style="background: #e1306c;">{{ orderCounts.instagram }}</span>
             </router-link>
 
-            <router-link to="/orders?filter=ulasilamayan" class="nav-item" :class="{ active: $route.query.filter === 'ulasilamayan' }">
+            <router-link to="/orders?filter=ulasilamayan" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'ulasilamayan' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                 <line x1="1" y1="1" x2="23" y2="23"/>
@@ -153,7 +153,7 @@
               <span v-if="orderCounts.ulasilamayan > 0" class="badge gray">{{ orderCounts.ulasilamayan }}</span>
             </router-link>
 
-            <router-link to="/orders?filter=shipped" class="nav-item" :class="{ active: $route.query.filter === 'shipped' }">
+            <router-link to="/orders?filter=shipped" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'shipped' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="1" y="3" width="15" height="13"/>
                 <polyline points="16 8 20 8 23 11 23 16 16 16 16 8"/>
@@ -163,7 +163,7 @@
               <span>Kargoya Verildi</span>
               <span v-if="orderCounts.shipped > 0" class="badge green">{{ orderCounts.shipped }}</span>
             </router-link>
-            <router-link to="/orders?filter=delivered" class="nav-item" :class="{ active: $route.query.filter === 'delivered' }">
+            <router-link to="/orders?filter=delivered" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'delivered' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
@@ -171,7 +171,7 @@
               <span>Tamamlanan</span>
               <span v-if="orderCounts.delivered > 0" class="badge green">{{ orderCounts.delivered }}</span>
             </router-link>
-            <router-link to="/orders?filter=returned" class="nav-item" :class="{ active: $route.query.filter === 'returned' }">
+            <router-link to="/orders?filter=returned" class="nav-item" :class="{ active: $route.path === '/orders' && $route.query.filter === 'returned' }">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="1 4 1 10 7 10"/>
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
@@ -181,6 +181,44 @@
             </router-link>
           </div>
         </div>
+
+        <!-- SCPanel Siparişleri -->
+        <div class="nav-group">
+          <button class="nav-group-toggle" @click="toggleGroup('scpanelSiparisleri')">
+            <span>SCPanel Siparişleri</span>
+            <svg :class="{ rotated: openGroups.scpanelSiparisleri }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="nav-group-items" v-show="openGroups.scpanelSiparisleri">
+            <router-link to="/scpanel-orders?filter=new" class="nav-item" :class="{ active: $route.path === '/scpanel-orders' && ($route.query.filter === 'new' || $route.query.filter === 'pending') }">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Yeni Siparişler</span>
+              <span v-if="scpanelCounts.new > 0" class="badge yellow">{{ scpanelCounts.new }}</span>
+            </router-link>
+            <router-link to="/scpanel-orders?filter=preparing" class="nav-item" :class="{ active: $route.path === '/scpanel-orders' && $route.query.filter === 'preparing' }">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 7h-9l-3 3H2v10h18V7z"/>
+                <path d="M2 10h18"/>
+              </svg>
+              <span>Hazırlanıyor</span>
+              <span v-if="scpanelCounts.preparing > 0" class="badge blue">{{ scpanelCounts.preparing }}</span>
+            </router-link>
+            <router-link to="/scpanel-orders?filter=cancelled" class="nav-item" :class="{ active: $route.path === '/scpanel-orders' && $route.query.filter === 'cancelled' }">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              <span>İptal</span>
+              <span v-if="scpanelCounts.cancelled > 0" class="badge red">{{ scpanelCounts.cancelled }}</span>
+            </router-link>
+          </div>
+        </div>
+
 
         <!-- Ürün Siparişleri -->
         <div class="nav-group">
@@ -382,18 +420,23 @@ const router = useRouter()
 const route = useRoute()
 
 const savedGroups = localStorage.getItem('sidebar_groups')
-const defaultGroups = { genel: true, siparisler: true, urunler: true, urunSiparisleri: true, kullanicilar: true, siteler: true, yaprakSayfalar: true, ayarlar: true }
+const defaultGroups = { genel: true, siparisler: true, scpanelSiparisleri: true, urunler: true, urunSiparisleri: true, kullanicilar: true, siteler: true, yaprakSayfalar: true, ayarlar: true }
 
 const openGroups = reactive(
   savedGroups ? { ...defaultGroups, ...JSON.parse(savedGroups) } : { ...defaultGroups }
 )
 
 const orderCounts = computed(() => orderStore.counts)
+const scpanelCounts = computed(() => orderStore.scpanelCounts)
 let countsInterval = null
 
 onMounted(() => {
   orderStore.fetchCounts()
-  countsInterval = setInterval(() => orderStore.fetchCounts(), 10000)
+  orderStore.fetchSCPanelCounts()
+  countsInterval = setInterval(() => {
+    orderStore.fetchCounts()
+    orderStore.fetchSCPanelCounts()
+  }, 10000)
 })
 
 onUnmounted(() => {

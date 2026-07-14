@@ -312,22 +312,18 @@ app.get('/api/external/orders/shipped', async (req, res) => {
     }
 });
 
-// 2. PUT - Sipariş durumunu güncelle (Tamamlandı veya İade)
+// 2. PUT - Sipariş durumunu güncelle
 app.put('/api/external/orders/:id/status', async (req, res) => {
     try {
         const { status } = req.body;
         const orderId = req.params.id;
 
-        // Sadece delivered ve returned durumlarına izin ver
-        const allowedStatuses = ['delivered', 'returned'];
+        // Genişletilmiş durumlar: 'preparing', 'cancelled' vb. eklenmiştir
+        const allowedStatuses = ['delivered', 'returned', 'preparing', 'cancelled', 'pending', 'approved'];
         if (!status || !allowedStatuses.includes(status)) {
             return res.status(400).json({
                 success: false,
-                message: `Geçersiz durum. İzin verilen durumlar: ${allowedStatuses.join(', ')}`,
-                allowed_statuses: {
-                    delivered: 'Tamamlandı',
-                    returned: 'İade'
-                }
+                message: `Geçersiz durum. İzin verilen durumlar: ${allowedStatuses.join(', ')}`
             });
         }
 
@@ -341,12 +337,11 @@ app.put('/api/external/orders/:id/status', async (req, res) => {
         await order.save();
 
         // Log kaydı oluştur
-        const statusLabel = status === 'delivered' ? 'Tamamlandı' : 'İade';
         await OrderLog.create({
             orderId: order._id,
             action: 'status_changed',
             changedBy: 'External API',
-            details: `Durum: ${oldStatus} → ${status} (${statusLabel})`,
+            details: `Durum: ${oldStatus} → ${status}`,
             metadata: {
                 oldStatus,
                 newStatus: status,
@@ -356,18 +351,69 @@ app.put('/api/external/orders/:id/status', async (req, res) => {
 
         res.json({
             success: true,
-            message: `Sipariş durumu "${statusLabel}" olarak güncellendi`,
+            message: `Sipariş durumu "${status}" olarak güncellendi`,
             order: {
                 id: order._id,
                 musteri_adi: order.fullName,
                 eski_durum: oldStatus,
-                yeni_durum: status,
-                yeni_durum_label: statusLabel
+                yeni_durum: status
             }
         });
     } catch (error) {
         console.error('❌ External API - Status Update Error:', error);
         res.status(500).json({ success: false, message: 'Durum güncellenemedi' });
+    }
+});
+
+// 2b. PUT - Sipariş detaylarını güncelle (Düzenleme)
+app.put('/api/external/orders/:id', async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Sipariş bulunamadı' });
+        }
+
+        const oldStatus = order.status;
+        const updateData = { ...req.body };
+
+        if (updateData.status && updateData.status !== oldStatus) {
+            await OrderLog.create({
+                orderId: order._id,
+                action: 'status_changed',
+                changedBy: 'External API',
+                details: `Durum: ${oldStatus} → ${updateData.status}`,
+                metadata: {
+                    oldStatus,
+                    newStatus: updateData.status,
+                    source: 'external_api'
+                }
+            });
+        }
+
+        const updated = await Order.findByIdAndUpdate(orderId, updateData, { new: true });
+        res.json({ success: true, order: updated });
+    } catch (error) {
+        console.error('❌ External API - Order Update Error:', error);
+        res.status(500).json({ success: false, message: 'Sipariş güncellenemedi' });
+    }
+});
+
+// 3. GET - SCPanel Orders Proxy
+app.get('/api/scpanel-orders', auth, async (req, res) => {
+    try {
+        const response = await axios.get('https://scpanel.siparisyonet.online/api/external/orders/yaprak-odd');
+        if (response.data && response.data.success) {
+            res.json({
+                success: true,
+                orders: response.data.data || []
+            });
+        } else {
+            res.status(500).json({ success: false, message: 'SCPanel API response not successful' });
+        }
+    } catch (error) {
+        console.error('❌ SCPanel Proxy Error:', error.message);
+        res.status(500).json({ success: false, message: 'SCPanel APIye ulaşılamadı' });
     }
 });
 
