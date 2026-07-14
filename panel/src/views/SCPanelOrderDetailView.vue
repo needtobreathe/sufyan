@@ -166,7 +166,7 @@
                 <tr>
                   <th>Ürün Adı</th>
                   <th style="width: 100px; text-align: center;">Adet</th>
-                  <th style="width: 120px; text-align: right;">Birim Fiyat</th>
+                  <th style="width: 120px; text-align: right;">Toplam Fiyat</th>
                   <th style="width: 40px;"></th>
                 </tr>
               </thead>
@@ -421,7 +421,7 @@ const handleSave = async () => {
 
 const computedTotalPrice = computed(() => {
   if (!order.value || !Array.isArray(order.value.items)) return 0
-  return order.value.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.qty || 1)), 0)
+  return order.value.items.reduce((sum, item) => sum + Number(item.price || 0), 0)
 })
 
 const addNewItem = () => {
