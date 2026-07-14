@@ -39,6 +39,9 @@
             >
               İptal Et
             </button>
+            <button class="btn btn-primary" @click="handleSave">
+              Kaydet
+            </button>
           </div>
         </div>
       </div>
@@ -54,12 +57,12 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Müşteri Adı</label>
-                <div class="display-val">{{ order.fullName }}</div>
+                <input type="text" v-model="order.fullName" class="form-input" />
               </div>
               <div class="form-group">
                 <label>Telefon</label>
                 <div class="phone-group">
-                  <span class="display-val">{{ order.phone }}</span>
+                  <input type="text" v-model="order.phone" class="form-input" />
                   <div class="phone-actions">
                     <button class="phone-btn wp" title="WhatsApp" @click="openWp">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -78,11 +81,11 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Ödeme Yöntemi</label>
-                <div class="display-val">{{ order.paymentMethod }}</div>
+                <input type="text" v-model="order.paymentMethod" class="form-input" />
               </div>
               <div class="form-group">
                 <label>Sipariş Tarihi</label>
-                <div class="display-val">{{ formatDate(order.createdAt) }} {{ formatTime(order.createdAt) }}</div>
+                <div class="display-val disabled">{{ formatDate(order.createdAt) }} {{ formatTime(order.createdAt) }}</div>
               </div>
             </div>
           </div>
@@ -95,16 +98,16 @@
             <div class="form-row">
               <div class="form-group">
                 <label>İl</label>
-                <div class="display-val">{{ order.province }}</div>
+                <input type="text" v-model="order.province" class="form-input" />
               </div>
               <div class="form-group">
                 <label>İlçe</label>
-                <div class="display-val">{{ order.district }}</div>
+                <input type="text" v-model="order.district" class="form-input" />
               </div>
             </div>
             <div class="form-group">
               <label>Adres Detayı</label>
-              <div class="display-val address-display">{{ order.address }}</div>
+              <textarea v-model="order.address" class="form-input form-textarea" rows="3"></textarea>
             </div>
           </div>
         </div>
@@ -113,28 +116,39 @@
         <div class="detail-col">
           <!-- Products Info -->
           <div class="detail-card">
-            <div class="card-header">
+            <div class="card-header flex-header">
               <h3>Sipariş Edilen Ürünler</h3>
+              <button class="add-item-btn" @click="addNewItem">+ Ürün Ekle</button>
             </div>
             <table class="items-table">
               <thead>
                 <tr>
                   <th>Ürün Adı</th>
-                  <th style="width: 80px; text-align: center;">Adet</th>
+                  <th style="width: 100px; text-align: center;">Adet</th>
                   <th style="width: 120px; text-align: right;">Birim Fiyat</th>
+                  <th style="width: 40px;"></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in order.items" :key="item._id || item.name">
-                  <td>{{ item.name }}</td>
-                  <td style="text-align: center; font-weight: 600;">{{ item.qty }}</td>
-                  <td style="text-align: right; font-weight: 600;">{{ item.price }} TL</td>
+                <tr v-for="(item, index) in order.items" :key="item._id || index">
+                  <td>
+                    <input type="text" v-model="item.name" class="form-input mini" />
+                  </td>
+                  <td>
+                    <input type="number" v-model.number="item.qty" class="form-input mini text-center" />
+                  </td>
+                  <td>
+                    <input type="number" v-model.number="item.price" class="form-input mini text-right" />
+                  </td>
+                  <td style="text-align: center;">
+                    <button class="remove-item-btn" @click="removeItem(index)" title="Ürünü Çıkar">&times;</button>
+                  </td>
                 </tr>
               </tbody>
             </table>
             <div class="total-row">
               <span>Toplam Tutar:</span>
-              <strong class="price-val">{{ order.totalPrice || 0 }} TL</strong>
+              <strong class="price-val">{{ computedTotalPrice }} TL</strong>
             </div>
           </div>
 
@@ -171,7 +185,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '../components/AdminLayout.vue'
 import { orderStore } from '../store/orderStore'
@@ -222,6 +236,55 @@ const updateStatus = async (newStatus) => {
     console.error('Durum güncellenirken hata:', error)
     alert('Bağlantı hatası oluştu.')
   }
+}
+
+const handleSave = async () => {
+  if (!order.value) return
+  isLoading.value = true
+  
+  // Update total price explicitly
+  order.value.totalPrice = computedTotalPrice.value
+
+  try {
+    const res = await fetch(`https://scpanel.siparisyonet.online/api/external/orders/${order.value._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(order.value)
+    })
+    const data = await res.json()
+    if (data.success) {
+      alert('Sipariş bilgileri başarıyla güncellendi.')
+      await fetchOrderDetail()
+      orderStore.fetchSCPanelCounts()
+    } else {
+      alert('Sipariş güncellenemedi: ' + (data.message || 'Hata'))
+    }
+  } catch (error) {
+    console.error('Sipariş kaydedilirken hata:', error)
+    alert('Bağlantı hatası oluştu.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const computedTotalPrice = computed(() => {
+  if (!order.value || !Array.isArray(order.value.items)) return 0
+  return order.value.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.qty || 1)), 0)
+})
+
+const addNewItem = () => {
+  if (!order.value) return
+  if (!order.value.items) order.value.items = []
+  order.value.items.push({
+    name: 'Yeni Ürün',
+    qty: 1,
+    price: 0
+  })
+}
+
+const removeItem = (index) => {
+  if (!order.value?.items) return
+  order.value.items.splice(index, 1)
 }
 
 const handleBack = () => {
@@ -463,6 +526,33 @@ onMounted(() => {
   margin: 0 0 20px 0;
 }
 
+.flex-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-header h3 {
+  margin-bottom: 0;
+}
+
+.add-item-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.add-item-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -497,25 +587,66 @@ onMounted(() => {
   align-items: center;
 }
 
-.address-display {
-  min-height: 80px;
-  align-items: flex-start;
+.display-val.disabled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: #3b82f6;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05);
+}
+
+.form-input.mini {
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
   line-height: 1.4;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
 }
 
 .tech-val {
   word-break: break-all;
   font-family: monospace;
   font-size: 12px;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .phone-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
 }
 
-.phone-group .display-val {
+.phone-group .form-input {
   flex: 1;
 }
 
@@ -571,10 +702,26 @@ onMounted(() => {
 }
 
 .items-table td {
-  padding: 12px 8px;
+  padding: 10px 8px;
   font-size: 14px;
   color: #1e293b;
   border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.remove-item-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.1s;
+}
+
+.remove-item-btn:hover {
+  color: #b91c1c;
 }
 
 .total-row {
