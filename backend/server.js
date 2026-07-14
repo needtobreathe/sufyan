@@ -399,6 +399,32 @@ app.put('/api/external/orders/:id', async (req, res) => {
     }
 });
 
+// 2c. GET - Şehirleri getir (Dışarıya açık)
+app.get('/api/external/cities', async (req, res) => {
+    try {
+        const citiesDb = await City.find({ status: true }).sort({ name: 1 });
+        const mapped = citiesDb.map(c => ({ id: c._id.toString(), name: c.name }));
+        res.json({ success: true, cities: mapped });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Şehirler çekilemedi' });
+    }
+});
+
+// 2d. GET - İlçeleri getir (Dışarıya açık)
+app.get('/api/external/districts', async (req, res) => {
+    try {
+        const cityId = req.query.city_id;
+        if (!cityId) {
+            return res.json({ success: true, districts: [] });
+        }
+        const districtsDb = await District.find({ city_id: cityId, status: true }).sort({ name: 1 });
+        const mapped = districtsDb.map(d => ({ id: d._id.toString(), name: d.name }));
+        res.json({ success: true, districts: mapped });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'İlçeler çekilemedi' });
+    }
+});
+
 // 3. GET - SCPanel Orders Proxy
 app.get('/api/scpanel-orders', auth, async (req, res) => {
     try {

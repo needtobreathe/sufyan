@@ -230,7 +230,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '../components/AdminLayout.vue'
 import { orderStore } from '../store/orderStore'
-import { apiFetch } from '@/utils/fetch'
 
 const route = useRoute()
 const router = useRouter()
@@ -247,7 +246,7 @@ const districtSearch = ref('')
 
 const fetchCities = async () => {
   try {
-    const res = await apiFetch('/api/cities?country_id=1')
+    const res = await fetch('https://scpanel.siparisyonet.online/api/external/cities')
     const data = await res.json()
     if (data.success) {
       cities.value = data.cities || []
@@ -261,7 +260,7 @@ const fetchCities = async () => {
 const fetchDistricts = async (cityId) => {
   if (!cityId) return
   try {
-    const res = await apiFetch(`/api/districts?city_id=${cityId}`)
+    const res = await fetch(`https://scpanel.siparisyonet.online/api/external/districts?city_id=${cityId}`)
     const data = await res.json()
     if (data.success) {
       districts.value = data.districts || []
