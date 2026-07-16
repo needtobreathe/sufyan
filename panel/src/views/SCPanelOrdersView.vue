@@ -32,86 +32,94 @@
       <div v-else-if="filteredOrders.length === 0" class="empty-state">
         <span>Sipariş bulunamadı.</span>
       </div>
-      <table class="data-table" v-else>
-        <thead>
-          <tr>
-            <th style="width: 120px">Sipariş No</th>
-            <th style="width: 180px">Müşteri</th>
-            <th style="width: 120px">Site</th>
-            <th>Ürünler</th>
-            <th style="width: 120px">Durum</th>
-            <th style="width: 120px">Tutar</th>
-            <th>Adres</th>
-            <th style="width: 250px">İşlemler</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="order in filteredOrders" :key="order._id">
-            <td>
-              <div class="order-no-col">
-                <span class="order-id">#{{ order.yaprakOrderIndex || order._id?.substring(0, 8) }}</span>
-                <span class="order-date">{{ formatDate(order.createdAt) }} {{ formatTime(order.createdAt) }}</span>
-              </div>
-            </td>
-            <td>
-              <div class="customer-col">
-                <span class="customer-name">{{ order.fullName }}</span>
-                <a :href="'tel:' + order.phone" class="customer-phone">{{ order.phone }}</a>
-              </div>
-            </td>
-            <td>
-              <div class="site-subdomain">
-                {{ order.site_id }}
-              </div>
-            </td>
-            <td>
-              <div class="items-col">
-                <div v-for="item in order.items" :key="item._id || item.name" class="item-row">
-                  <span class="item-name">{{ item.name }}</span>
-                  <span class="item-qty">x{{ item.qty }}</span>
+      <div class="table-responsive" v-else>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 120px">Sipariş No</th>
+              <th style="width: 180px">Müşteri</th>
+              <th style="width: 120px">Site</th>
+              <th>Ürünler</th>
+              <th style="width: 120px">Durum</th>
+              <th style="width: 120px">Tutar</th>
+              <th>Adres</th>
+              <th style="width: 250px">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="order in filteredOrders" :key="order._id">
+              <td>
+                <div class="order-no-col">
+                  <span class="order-id">#{{ order.yaprakOrderIndex || order._id?.substring(0, 8) }}</span>
+                  <span class="order-date">{{ formatDate(order.createdAt) }} {{ formatTime(order.createdAt) }}</span>
                 </div>
-              </div>
-            </td>
-            <td>
-              <span :class="['status-badge', getStatusClass(order.status)]">
-                {{ getStatusText(order.status) }}
-              </span>
-            </td>
-            <td>
-              <span class="total-price">{{ order.totalPrice || 0 }} TL</span>
-            </td>
-            <td>
-              <div class="address-text" :title="order.address">
-                <span class="address-region" v-if="order.province !== 'Belirtilmedi'">{{ order.province }} / {{ order.district }}</span>
-                <span class="address-details">{{ order.address }}</span>
-              </div>
-            </td>
-            <td>
-              <div class="actions-col">
-                <router-link :to="'/scpanel-orders/' + order._id" class="action-btn view-btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-                  Görüntüle
-                </router-link>
-                <button 
-                  v-if="order.status !== 'preparing' && order.status !== '3'" 
-                  class="action-btn prep-btn" 
-                  @click="updateStatus(order._id, 'preparing')" 
-                  title="Siparişi Onayla"
-                >
-                  Onayla
-                </button>
-                <button 
-                  v-if="order.status !== 'cancelled' && order.status !== '9' && order.status !== '10' && order.status !== '11'" 
-                  class="action-btn cancel-btn" 
-                  @click="updateStatus(order._id, 'cancelled')" 
-                  title="İptal Et"
-                >
-                  İptal
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              </td>
+              <td>
+                <div class="customer-col">
+                  <span class="customer-name">{{ order.fullName }}</span>
+                  <a :href="'tel:' + order.phone" class="customer-phone">{{ order.phone }}</a>
+                </div>
+              </td>
+              <td>
+                <div class="site-subdomain">
+                  {{ order.site_id }}
+                </div>
+              </td>
+              <td>
+                <div class="items-col">
+                  <div v-for="item in order.items" :key="item._id || item.name" class="item-row">
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-qty">x{{ item.qty }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span :class="['status-badge', getStatusClass(order.status)]">
+                  {{ getStatusText(order.status) }}
+                </span>
+              </td>
+              <td>
+                <span class="total-price">{{ order.totalPrice || 0 }} TL</span>
+              </td>
+              <td>
+                <div class="address-text" :title="order.address">
+                  <span class="address-region" v-if="order.province !== 'Belirtilmedi'">{{ order.province }} / {{ order.district }}</span>
+                  <span class="address-details">{{ order.address }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="actions-col">
+                  <router-link :to="'/scpanel-orders/' + order._id" class="action-btn view-btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                    Görüntüle
+                  </router-link>
+                  <button 
+                    v-if="order.status !== 'preparing' && order.status !== '3'" 
+                    class="action-btn prep-btn" 
+                    @click="updateStatus(order._id, 'preparing')" 
+                    title="Siparişi Onayla"
+                  >
+                    Onayla
+                  </button>
+                  <button 
+                    v-if="order.status !== 'cancelled' && order.status !== '9' && order.status !== '10' && order.status !== '11'" 
+                    class="action-btn cancel-btn" 
+                    @click="updateStatus(order._id, 'cancelled')" 
+                    title="İptal Et"
+                  >
+                    İptal
+                  </button>
+                  <button class="action-btn call-btn" @click.stop="makeCall(order.phone)">
+                    Ara
+                  </button>
+                  <button class="action-btn whatsapp-btn-action" @click.stop="sendWhatsApp(order)">
+                    WhatsApp
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </AdminLayout>
 </template>
@@ -247,10 +255,38 @@ onMounted(() => {
   fetchSCPanelOrders()
 })
 
-// Refetch on filter changes
-watch(() => route.query.filter, () => {
-  fetchSCPanelOrders()
-})
+const sendWhatsApp = (order) => {
+  const customerName = order.fullName || '';
+  const phone = order.phone || '';
+  const address = order.address || '';
+  
+  let productsText = '';
+  if (Array.isArray(order.items)) {
+    productsText = order.items.map(item => `${item.qty} adet ${item.name}`).join(', ');
+  } else {
+    productsText = '-';
+  }
+  
+  const total = order.totalPrice || 0;
+
+  const message = `Sayın ${customerName}, \nSipariş bilgileriniz aşağıdadır: \nAd Soyad: ${customerName} \nTelefon: ${phone} \nAdres: ${address} \nÜrün: ${productsText} \nToplam Tutar: ${total} TL \nKapıda nakit mi kapıda kart mı ödeyeceksiniz? \nSiparişinizi onaylamanız durumunda yarın kargoya verilecektir.`;
+
+  const encodedMessage = encodeURIComponent(message);
+  let targetPhone = phone.replace(/[^0-9]/g, '');
+  if (targetPhone.startsWith('0')) {
+    targetPhone = '90' + targetPhone.substring(1);
+  } else if (!targetPhone.startsWith('90') && targetPhone.length === 10) {
+    targetPhone = '90' + targetPhone;
+  }
+  
+  window.open(`https://wa.me/${targetPhone}?text=${encodedMessage}`, '_blank');
+}
+
+const makeCall = (phone) => {
+  if (!phone) return;
+  const targetPhone = phone.replace(/[^0-9]/g, '');
+  window.location.href = `tel:${targetPhone}`;
+}
 </script>
 
 <style scoped>
@@ -693,5 +729,11 @@ watch(() => route.query.filter, () => {
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 </style>

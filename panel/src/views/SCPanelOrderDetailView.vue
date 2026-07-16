@@ -161,32 +161,34 @@
               <h3>Sipariş Edilen Ürünler</h3>
               <button class="add-item-btn" @click="addNewItem">+ Ürün Ekle</button>
             </div>
-            <table class="items-table">
-              <thead>
-                <tr>
-                  <th>Ürün Adı</th>
-                  <th style="width: 100px; text-align: center;">Adet</th>
-                  <th style="width: 120px; text-align: right;">Toplam Fiyat</th>
-                  <th style="width: 40px;"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(item, index) in order.items" :key="item._id || index">
-                  <td>
-                    <input type="text" v-model="item.name" class="form-input mini" />
-                  </td>
-                  <td>
-                    <input type="number" v-model.number="item.qty" class="form-input mini text-center" />
-                  </td>
-                  <td>
-                    <input type="number" v-model.number="item.price" class="form-input mini text-right" />
-                  </td>
-                  <td style="text-align: center;">
-                    <button class="remove-item-btn" @click="removeItem(index)" title="Ürünü Çıkar">&times;</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>Ürün Adı</th>
+                    <th style="width: 100px; text-align: center;">Adet</th>
+                    <th style="width: 120px; text-align: right;">Toplam Fiyat</th>
+                    <th style="width: 40px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, index) in order.items" :key="item._id || index">
+                    <td>
+                      <input type="text" v-model="item.name" class="form-input mini" />
+                    </td>
+                    <td>
+                      <input type="number" v-model.number="item.qty" class="form-input mini text-center" />
+                    </td>
+                    <td>
+                      <input type="number" v-model.number="item.price" class="form-input mini text-right" />
+                    </td>
+                    <td style="text-align: center;">
+                      <button class="remove-item-btn" @click="removeItem(index)" title="Ürünü Çıkar">&times;</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
             <div class="total-row">
               <span>Toplam Tutar:</span>
               <strong class="price-val">{{ computedTotalPrice }} TL</strong>
@@ -445,14 +447,29 @@ const handleBack = () => {
 
 const openWp = () => {
   if (!order.value?.phone) return
-  let p = order.value.phone
-  p = p.replace(/\D/g, '')
+  const customerName = order.value.fullName || '';
+  const phone = order.value.phone || '';
+  const address = order.value.address || '';
+  
+  let productsText = '';
+  if (Array.isArray(order.value.items)) {
+    productsText = order.value.items.map(item => `${item.qty} adet ${item.name}`).join(', ');
+  } else {
+    productsText = '-';
+  }
+  
+  const total = order.value.totalPrice || 0;
+
+  const message = `Sayın ${customerName}, \nSipariş bilgileriniz aşağıdadır: \nAd Soyad: ${customerName} \nTelefon: ${phone} \nAdres: ${address} \nÜrün: ${productsText} \nToplam Tutar: ${total} TL \nKapıda nakit mi kapıda kart mı ödeyeceksiniz? \nSiparişinizi onaylamanız durumunda yarın kargoya verilecektir.`;
+
+  const encodedMessage = encodeURIComponent(message);
+  let p = phone.replace(/\D/g, '')
   if (p.startsWith('0')) {
     p = '90' + p.substring(1)
   } else if (!p.startsWith('90') && p.length === 10) {
     p = '90' + p
   }
-  window.open(`https://wa.me/${p}`, '_blank')
+  window.open(`https://wa.me/${p}?text=${encodedMessage}`, '_blank')
 }
 
 const openCall = () => {
@@ -937,5 +954,11 @@ onMounted(async () => {
   .detail-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 </style>
