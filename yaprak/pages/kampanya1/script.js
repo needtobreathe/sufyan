@@ -302,8 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Scroll to form functionality
     const scrollToForm = () => {
-        const target = document.getElementById('siparis-formu');
-        target.scrollIntoView({ behavior: 'smooth' });
+        const target = document.querySelector('.package-section-wrapper') || document.getElementById('siparis-formu');
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+        }
         
         // Trigger AddToCart when user shows intent to buy
         if (typeof ttq !== 'undefined') {
