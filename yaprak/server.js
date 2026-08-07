@@ -91,9 +91,10 @@ app.post('/api/app-state', async (req, res) => {
         if (typeof req.body === 'string') payload = JSON.parse(req.body);
         const { device_id, session_id, visit_count, event_name, data, siteId } = payload;
         if (!device_id || !session_id || !event_name) return;
+        const clientIp = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
         const log = new EventLog({
             site_id: siteId, device_id, session_id,
-            ip_address: req.ip || req.connection.remoteAddress,
+            ip_address: clientIp,
             visit_count, event_name, data
         });
         await log.save();

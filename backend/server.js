@@ -1160,7 +1160,7 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
             }}
         ];
 
-        const activeThreshold = new Date(Date.now() - 60 * 1000); // 60 seconds
+        const activeThreshold = new Date(Date.now() - 5 * 1000); // 5 seconds (real-time ping)
         
         const [
             dbProducts, monthlyOrders, todayVisitorsBySite, liveVisitorsBySite, leafPages
@@ -1174,7 +1174,7 @@ app.get('/api/get_dashboard_stats.php', auth, async (req, res) => {
             ]),
             EventLog.aggregate([
                 { $match: { timestamp: { $gte: activeThreshold } } },
-                { $group: { _id: "$site_id", count: { $addToSet: "$session_id" } } },
+                { $group: { _id: "$site_id", count: { $addToSet: "$ip_address" } } },
                 { $project: { _id: 1, count: { $size: "$count" } } }
             ]),
             LeafPage.find({}, 'name slug').lean()
@@ -1745,11 +1745,11 @@ app.get('/api/leaf-pages', auth, async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    // Active users in last 60 seconds
-    const activeThreshold = new Date(Date.now() - 60 * 1000);
+    // Active users in last 5 seconds (each unique IP address = 1 visitor)
+    const activeThreshold = new Date(Date.now() - 5 * 1000);
     const activeUsersCount = await EventLog.aggregate([
       { $match: { timestamp: { $gte: activeThreshold } } },
-      { $group: { _id: "$site_id", users: { $addToSet: "$session_id" } } },
+      { $group: { _id: "$site_id", users: { $addToSet: "$ip_address" } } },
       { $project: { _id: 1, count: { $size: "$users" } } }
     ]);
     const activeUsersMap = {};
@@ -1882,10 +1882,10 @@ app.get('/api/sites', auth, async (req, res) => {
         
         const now = new Date();
         const startOfToday = new Date(now.setHours(0, 0, 0, 0));
-        const activeThreshold = new Date(Date.now() - 60 * 1000); // 60 seconds
+        const activeThreshold = new Date(Date.now() - 5 * 1000); // 5 seconds
         
         const sitesWithActive = await Promise.all(sites.map(async (site) => {
-            const activeUsers = await EventLog.distinct('session_id', {
+            const activeUsers = await EventLog.distinct('ip_address', {
                 site_id: site.subdomain,
                 timestamp: { $gte: activeThreshold }
             });
@@ -3055,11 +3055,11 @@ app.get('/api/reporting/summary', auth, async (req, res) => {
 app.get('/api/reporting/live', auth, async (req, res) => {
     try {
         const { site_id } = req.query;
-        const activeThreshold = new Date(Date.now() - 30 * 1000);
+        const activeThreshold = new Date(Date.now() - 5 * 1000);
         const query = { timestamp: { $gte: activeThreshold } };
         if (site_id) query.site_id = site_id;
 
-        const count = await EventLog.distinct('session_id', query);
+        const count = await EventLog.distinct('ip_address', query);
         res.json({ success: true, count: count.length });
     } catch (error) {
         res.status(500).json({ success: false });

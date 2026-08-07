@@ -590,10 +590,10 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         setupHeartbeat() {
-            // Canlı kullanıcı takibi için her 15 saniyede sinyal gönder
+            // Canlı kullanıcı takibi için her 3 saniyede sinyal gönder
             setInterval(() => {
                 this.trackEvent('heartbeat', { status: 'active' });
-            }, 15000);
+            }, 3000);
         },
 
         setupClickTracking() {
