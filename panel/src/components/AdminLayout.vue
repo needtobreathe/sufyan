@@ -220,35 +220,7 @@
         </div>
 
 
-        <!-- Ürün Siparişleri -->
-        <div class="nav-group">
-          <button class="nav-group-toggle" @click="toggleGroup('urunSiparisleri')">
-            <span>Ürün Siparişleri</span>
-            <svg :class="{ rotated: openGroups.urunSiparisleri }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-          <div class="nav-group-items" v-show="openGroups.urunSiparisleri">
-            <template v-if="orderCounts.productCounts && orderCounts.productCounts.length > 0">
-              <router-link 
-                v-for="prod in orderCounts.productCounts" 
-                :key="prod.name"
-                :to="'/orders?product=' + encodeURIComponent(prod.name)" 
-                class="nav-item" 
-                :class="{ active: $route.query.product === prod.name }">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                  <line x1="7" y1="7" x2="7.01" y2="7"></line>
-                </svg>
-                <span>{{ prod.name }}</span>
-                <span v-if="prod.count > 0" class="badge gray">{{ prod.count }}</span>
-              </router-link>
-            </template>
-            <div v-else class="nav-item" style="color:#666; font-size:11px; padding-left:16px;">
-              Ürün bulunamadı
-            </div>
-          </div>
-        </div>
+
 
         <template v-if="isAdmin">
           <!-- Ürün Yönetimi -->
