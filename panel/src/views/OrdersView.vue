@@ -389,6 +389,7 @@ import ShipmentModal from '../components/ShipmentModal.vue'
 import { orderStore } from '../store/orderStore'
 import * as XLSX from 'xlsx'
 
+const router = useRouter()
 const route = useRoute()
 
 const statusLabels = {
@@ -720,7 +721,7 @@ const maskPhone = (phone) => {
 
 // Watch for route query changes (filter or page)
 watch(() => route.query, async (newQuery, oldQuery) => {
-  if (newQuery.filter !== oldQuery.filter || newQuery.page !== oldQuery.page) {
+  if (!oldQuery || newQuery.filter !== oldQuery.filter || newQuery.page !== oldQuery.page) {
     currentPage.value = parseInt(newQuery.page) || 1
     await fetchOrders(currentPage.value)
   }
