@@ -194,10 +194,10 @@ const getPageUrl = (page) => {
       return `https://${page.site.customDomain}/p/${page.slug}`
     }
     if (page.site.subdomain) {
-      return `https://${page.site.subdomain}.acacialifebl.store`
+      return `https://${page.site.subdomain}.acacialifewr.site`
     }
   }
-  return `https://${page.slug}.acacialifebl.store`
+  return `https://${page.slug}.acacialifewr.site`
 }
 
 const copyLink = (page) => {
