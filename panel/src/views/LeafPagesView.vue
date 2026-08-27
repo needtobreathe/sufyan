@@ -348,7 +348,7 @@ let refreshInterval = null
 
 onMounted(() => {
   fetchInitialData()
-  refreshInterval = setInterval(() => fetchInitialData(currentPage.value), 10000)
+  refreshInterval = setInterval(() => fetchInitialData(currentPage.value), 30000)
 })
 
 onUnmounted(() => {
