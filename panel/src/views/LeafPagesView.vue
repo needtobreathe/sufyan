@@ -35,88 +35,90 @@
 
     <div class="table-card">
       <div v-if="loading" class="loading-state">Yükleniyor...</div>
-      <table v-else class="data-table">
-        <thead>
-          <tr>
-            <th>Sayfa Adı</th>
-            <th>İlişkili Ürün</th>
-            <th>Uzantı (Slug)</th>
-            <th class="center-th">Bugünkü Sipariş</th>
-            <th class="center-th">Toplam Sipariş</th>
-            <th>Bağlantı</th>
-            <th>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="page in leafPages" :key="page._id">
-            <td class="page-name">
-              <div class="site-name-wrapper">
-                {{ page.name }}
-                <div v-if="page.activeUsers > 0" class="live-badge" :title="`Şu an ${page.activeUsers} aktif ziyaretçi var`">
-                  <span class="live-dot"></span>
-                  <span class="live-count">{{ page.activeUsers }}</span>
+      <div v-else class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Sayfa Adı</th>
+              <th>İlişkili Ürün</th>
+              <th>Uzantı (Slug)</th>
+              <th class="center-th">Bugünkü Sipariş</th>
+              <th class="center-th">Toplam Sipariş</th>
+              <th>Bağlantı</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="page in leafPages" :key="page._id">
+              <td class="page-name">
+                <div class="site-name-wrapper">
+                  {{ page.name }}
+                  <div v-if="page.activeUsers > 0" class="live-badge" :title="`Şu an ${page.activeUsers} aktif ziyaretçi var`">
+                    <span class="live-dot"></span>
+                    <span class="live-count">{{ page.activeUsers }}</span>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td>
-              <span class="product-tag" :class="{ 'no-product': !page.productId }">
-                {{ getProductName(page) }}
-              </span>
-            </td>
-            <td><code>{{ page.slug }}</code></td>
-            <td class="order-cell">
-              <span class="order-badge today" :class="{ 'zero': !page.ordersToday }">{{ page.ordersToday || 0 }}</span>
-            </td>
-            <td class="order-cell">
-              <span class="order-badge total">{{ page.ordersTotal || 0 }}</span>
-            </td>
-            <td>
-              <div class="link-action">
-                <a :href="getPageUrl(page)" target="_blank" class="preview-link">Görüntüle</a>
-                <button class="copy-btn" @click="copyLink(page)">Kopyala</button>
-              </div>
-            </td>
-            <td>
-              <div class="actions">
-                <button 
-                  v-if="hasShopifyProduct(page)" 
-                  class="action-btn action-shopify" 
-                  @click="pushPackagesToShopify(page)"
-                  :disabled="pushing === page._id"
-                  title="Paketleri Shopify Varyantı Olarak Gönder"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                    <path d="M2 17l10 5 10-5"/>
-                    <path d="M2 12l10 5 10-5"/>
-                  </svg>
-                  {{ pushing === page._id ? 'Aktarılıyor...' : 'Shopify\'a Gönder' }}
-                </button>
-                <button class="action-btn action-clone" @click="clonePage(page._id)" :disabled="cloning === page._id">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  {{ cloning === page._id ? 'Klonlanıyor...' : 'Kopyala' }}
-                </button>
-                <button class="action-btn action-reports" @click="$router.push('/leaf-pages/' + page.slug + '/reports')">
-                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
-                   Rapor
-                </button>
-                <button class="action-btn action-edit" @click="$router.push('/leaf-pages/' + page._id + '/edit')">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Düzenle
-                </button>
-                <button class="action-btn action-delete" @click="deletePage(page._id)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  Sil
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="leafPages.length === 0">
-            <td colspan="7" style="text-align: center; color: #999; padding: 40px;">Henüz bir yaprak sayfa oluşturulmamış.</td>
-          </tr>
-        </tbody>
-      </table>
+              </td>
+              <td>
+                <span class="product-tag" :class="{ 'no-product': !page.productId }">
+                  {{ getProductName(page) }}
+                </span>
+              </td>
+              <td><code>{{ page.slug }}</code></td>
+              <td class="order-cell">
+                <span class="order-badge today" :class="{ 'zero': !page.ordersToday }">{{ page.ordersToday || 0 }}</span>
+              </td>
+              <td class="order-cell">
+                <span class="order-badge total">{{ page.ordersTotal || 0 }}</span>
+              </td>
+              <td>
+                <div class="link-action">
+                  <a :href="getPageUrl(page)" target="_blank" class="preview-link">Görüntüle</a>
+                  <button class="copy-btn" @click="copyLink(page)">Kopyala</button>
+                </div>
+              </td>
+              <td>
+                <div class="actions">
+                  <button 
+                    v-if="hasShopifyProduct(page)" 
+                    class="action-btn action-shopify" 
+                    @click="pushPackagesToShopify(page)"
+                    :disabled="pushing === page._id"
+                    title="Paketleri Shopify Varyantı Olarak Gönder"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                      <path d="M2 17l10 5 10-5"/>
+                      <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    {{ pushing === page._id ? 'Aktarılıyor...' : 'Shopify\'a Gönder' }}
+                  </button>
+                  <button class="action-btn action-clone" @click="clonePage(page._id)" :disabled="cloning === page._id">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    {{ cloning === page._id ? 'Klonlanıyor...' : 'Kopyala' }}
+                  </button>
+                  <button class="action-btn action-reports" @click="$router.push('/leaf-pages/' + page.slug + '/reports')">
+                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                     Rapor
+                  </button>
+                  <button class="action-btn action-edit" @click="$router.push('/leaf-pages/' + page._id + '/edit')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Düzenle
+                  </button>
+                  <button class="action-btn action-delete" @click="deletePage(page._id)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Sil
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="leafPages.length === 0">
+              <td colspan="7" style="text-align: center; color: #999; padding: 40px;">Henüz bir yaprak sayfa oluşturulmamış.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- Pagination Footer -->
       <div v-if="totalPages > 1" class="pagination-footer">
@@ -426,6 +428,18 @@ onUnmounted(() => {
   border: 1px solid #e5e5e5;
   border-radius: 8px;
   overflow: hidden;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .data-table {
+    min-width: 850px;
+  }
 }
 
 .loading-state {
