@@ -16,7 +16,7 @@
         <div v-for="card in topCards" :key="card.key" :class="['metric-card', card.themeClass]">
           <div class="card-header">
             <span class="card-title">{{ card.title }}</span>
-            <span v-if="card.key === 'today'" class="trend-badge down">▼ 77%</span>
+            <span v-if="card.key === 'today'" :class="['trend-badge', todayTrend.isUp ? 'up' : 'down']">{{ todayTrend.text }}</span>
           </div>
           
           <div class="card-body">
@@ -298,6 +298,25 @@ const isChartReady = ref(false)
 
 const liveVisitors = computed(() => {
   return statsData.value.visitors?.filter(s => s.live > 0) || []
+})
+
+const todayTrend = computed(() => {
+  const today = statsData.value.today?.count || 0
+  const yesterday = statsData.value.yesterday?.count || 0
+  
+  if (yesterday === 0) {
+    if (today === 0) return { isUp: true, text: '%0' }
+    return { isUp: true, text: '▲ 100%' }
+  }
+  
+  const diff = today - yesterday
+  const percent = Math.round((diff / yesterday) * 100)
+  
+  if (percent >= 0) {
+    return { isUp: true, text: `▲ ${percent}%` }
+  } else {
+    return { isUp: false, text: `▼ ${Math.abs(percent)}%` }
+  }
 })
 
 const productSearch = ref('')
